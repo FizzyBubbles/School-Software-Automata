@@ -18,11 +18,11 @@ function isInside(x, y, w, h){
   }
 }
 
-function constructGrid(cellSize) {
+function constructGrid(rows, columns) {
   let grid = [];
-  for (let cellX = 0; cellX < floor(gridSize.x/cellSize); cellX++) {
+  for (let cellX = 0; cellX < rows; cellX++) {
     let column = [];
-    for (let cellY = 0; cellY < floor(gridSize.y/cellSize); cellY++) {
+    for (let cellY = 0; cellY < columns; cellY++) {
       column.push(false);
     }
     grid.push(column);
@@ -30,9 +30,21 @@ function constructGrid(cellSize) {
   return grid;
 }
 
-function grid(cellSize) {
+class Grid {
+  constructor(rows, columns){
+    this.cells = constructGrid(rows, columns)
+  }
+}
+
+function grid(cellSize, rows, columns) {
+  this.grid;
+  if (rows && columns) {
+    this.grid = new Grid(rows, columns);
+  } else {
+    this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
+  }
   this.cellSize = cellSize;
-  this.grid = constructGrid(cellSize);
+
 
   this.cellState = (cellX, cellY) => { // returns the state
     return this.grid[cellX][cellY];
@@ -53,12 +65,33 @@ function grid(cellSize) {
   }
 
   this.update = () => {
+    let newGrid = []
     for (cellX in this.grid) {
+      let column = [];
       for (cellY in this.grid[cellX]) {
+        column.push(false);
         if (this.cellState(cellX, cellY)) {
+          switch (this.neighbours(cellX, cellY)) {
+            case 2:
+              column.push(this.cellState(cellX, cellY));
+              break;
+
+            case 3:
+              if (!this.cellState(cellX, cellY)){
+                column.push(true);
+              }
+              break;
+
+            default:
+              column.push(false);
+              break;
+
+          }
         }
       }
+      newGrid.push(column);
     }
+    this.grid = newGrid
   }
 
   this.display = () => { // displays the grid on the canvas
@@ -73,16 +106,18 @@ function grid(cellSize) {
       }
     }
   }
-
-  this.changeCellState = () => {
-    let cellX = Math.floor(mouseX/this.cellSize);
-    let cellY = Math.floor(mouseY/this.cellSize);
-    this.grid[cellX][cellY] = !this.cellState(cellX, cellY);
+  this.changeCellState = (cellX, cellY, state) => {
+    this.grid[cellX][cellY] = state;
+  }
+  this.flipChangeState = (cellX, cellY) => {
+    this.changeCellState(cellX, cellY, !this.cellState(cellX, cellY));
   }
 }
 
 function mousePressed() {
-  currentMap.changeCellState();
+  let cellX = floor(mouseX/currentMap.cellSize);
+  let cellY = floor(mouseY/currentMap.cellSize);
+  currentMap.flipChangeState(cellX, cellY);
 }
 
 function draw() {

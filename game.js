@@ -7,6 +7,14 @@ function setup() {
   currentMap = new grid(50);
 }
 
+function inside(x, y, w, h){
+  if(mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function constructGrid(cellSize) {
   let grid = [];
   for (let cellX = 0; cellX < floor(gridSize.x/cellSize); cellX++) {

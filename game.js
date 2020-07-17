@@ -64,10 +64,25 @@ function grid(cellSize) {
   this.display = () => { // displays the grid on the canvas
     for (let x = 0;  x < this.grid.length; x++) {
       for (let y = 0;  y < this.grid[x].length; y++) {
-        rect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+        if (this.cellState(x, y)) {
+          fill('black');
+        } else {
+          fill('white');
+        }
+        square(x * this.cellSize, y * this.cellSize, this.cellSize);
       }
     }
   }
+
+  this.changeCellState = () => {
+    let cellX = Math.floor(mouseX/this.cellSize);
+    let cellY = Math.floor(mouseY/this.cellSize);
+    this.grid[cellX][cellY] = !this.cellState(cellX, cellY);
+  }
+}
+
+function mousePressed() {
+  currentMap.changeCellState();
 }
 
 function draw() {

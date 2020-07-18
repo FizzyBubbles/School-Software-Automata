@@ -80,7 +80,10 @@ function grid(cellSize, rows, columns) {
   }
   this.cellSize = cellSize;
 
-
+  this.iterate = () => {
+    this.update();
+    this.display();
+  }
 
   this.update = () => {
     let newGrid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
@@ -130,10 +133,10 @@ function mousePressed() {
   currentMap.display();
 }
 
+
 function draw() {
   //background(0);
   if (frameCount%10 == 0 && play) {
-    currentMap.update();
-    currentMap.display();
+    currentMap.iterate();
   }
 }

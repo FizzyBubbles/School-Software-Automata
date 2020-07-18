@@ -5,11 +5,11 @@ let play = false;
 function setup() {
   gridSize = createVector(500, 500);
   createCanvas(gridSize.x, gridSize.y);
-  currentMap = new grid(50);
-
+  currentMap = new grid(25);
+  currentMap.display();
 }
 
-function isInside(x, y, w, h){
+function isInside(x, y, w, h) { // checks whether mouse is inside a box of specified size and location
   if(mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
     return true;
   } else {
@@ -17,14 +17,22 @@ function isInside(x, y, w, h){
   }
 }
 
-function constructGrid(rows, columns) {
+function keyPressed() {
+  if (keyCode === 32 && play) {
+    play = false;
+  } else if (keyCode === 32) {
+    play = true;
+  }
+}
+
+function constructGrid(rows, columns) { // creates a new 2d array using for loops
   let grid = [];
   for (let cellX = 0; cellX < rows; cellX++) {
     let column = [];
     for (let cellY = 0; cellY < columns; cellY++) {
-      column.push(false);
+      column.push(false); // adds the default state false into the columns
     }
-    grid.push(column);
+    grid.push(column); //
   }
   return grid;
 }
@@ -34,7 +42,6 @@ class Grid {
     this.cells = constructGrid(rows, columns)
   }
   addCell(x, y, state) {
-    console.log(this.cells, state)
     this.cells[x][y] = state;
   }
   checkCell(x, y) {
@@ -98,7 +105,6 @@ function grid(cellSize, rows, columns) {
         }
       }
     }
-    console.log(newGrid)
     this.grid = newGrid;
   }
 
@@ -121,12 +127,13 @@ function mousePressed() {
   let cellX = floor(mouseX/currentMap.cellSize);
   let cellY = floor(mouseY/currentMap.cellSize);
   currentMap.grid.flipCellState(cellX, cellY);
+  currentMap.display();
 }
 
 function draw() {
   //background(0);
-  currentMap.display();
-  if (frameCount%20 == 0 && play) {
+  if (frameCount%10 == 0 && play) {
     currentMap.update();
+    currentMap.display();
   }
 }

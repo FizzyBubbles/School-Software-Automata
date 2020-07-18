@@ -1,7 +1,7 @@
 let currentMap = []; //must be an array()
 let gridSize;
 let neighbourhood;
-
+let play = false;
 function setup() {
   gridSize = createVector(500, 500);
   createCanvas(gridSize.x, gridSize.y);
@@ -48,9 +48,10 @@ class Grid {
     let amountOfNeighbours = 0;
     let cellPos = createVector(x, y);
     let cell;
+
     for (cell in neighbourhood) {
       let neighbour = p5.Vector.add(cellPos, neighbourhood[cell]);
-      if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x <= this.cells.length && neighbour.y <= this.cells.length)
+      if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length)
 
         if (this.checkCell(neighbour.x, neighbour.y)) {
           amountOfNeighbours++;
@@ -76,21 +77,19 @@ function grid(cellSize, rows, columns) {
 
   this.update = () => {
     let newGrid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
-    for (cellX in this.grid.cells.length) {
-      for (cellY in this.grid.cells[cellX].length) {
-        console.log(cellX, cellY)
+    for (let cellX = 0; cellX < this.grid.cells.length; cellX++) {
+      for (let cellY = 0; cellY < this.grid.cells[cellX].length; cellY++) {
         switch (this.grid.neighbours(cellX, cellY)) {
           case 2:
+
             if (this.grid.checkCell(cellX, cellY)){
-              this.newGrid.addCell(cellX, cellY, true);
+              newGrid.addCell(cellX, cellY, true);
             }
             break;
 
           case 3:
-            console.log(this.grid.checkCell(cellX, cellY), "hey")
-            if (!this.grid.checkCell(cellX, cellY)){
-              this.newGrid.addCell(cellX, cellY, true)
-            }
+            newGrid.addCell(cellX, cellY, true)
+
             break;
 
           default:
@@ -127,4 +126,7 @@ function mousePressed() {
 function draw() {
   //background(0);
   currentMap.display();
+  if (frameCount%20 == 0 && play) {
+    currentMap.update();
+  }
 }

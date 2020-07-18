@@ -3,7 +3,6 @@ let gridSize;
 let neighbourhood;
 
 function setup() {
-  neighbourhood = [createVector(-1, -1), createVector(-1, 0), createVector(-1, 1), createVector(0, -1), createVector(0, 1), createVector(1, -1), createVector(1, 0), createVector(1, 1)];
   gridSize = createVector(500, 500);
   createCanvas(gridSize.x, gridSize.y);
   currentMap = new grid(50);
@@ -35,6 +34,7 @@ class Grid {
     this.cells = constructGrid(rows, columns)
   }
   addCell(x, y, state) {
+    console.log(this.cells, state)
     this.cells[x][y] = state;
   }
   checkCell(x, y) {
@@ -42,6 +42,24 @@ class Grid {
   }
   flipCellState(x, y) {
     this.cells[x][y] = !this.cells[x][y];
+  }
+  neighbours(x, y) {
+    neighbourhood = [createVector(-1, -1), createVector(-1, 0), createVector(-1, 1), createVector(0, -1), createVector(0, 1), createVector(1, -1), createVector(1, 0), createVector(1, 1)];
+    let amountOfNeighbours = 0;
+    let cellPos = createVector(x, y);
+    let cell;
+    for (cell in neighbourhood) {
+      let neighbour = p5.Vector.add(cellPos, neighbourhood[cell]);
+      if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x <= this.cells.length && neighbour.y <= this.cells.length)
+
+        if (this.checkCell(neighbour.x, neighbour.y)) {
+          amountOfNeighbours++;
+        }
+
+    }
+
+    return amountOfNeighbours;
+
   }
 }
 
@@ -54,48 +72,35 @@ function grid(cellSize, rows, columns) {
   }
   this.cellSize = cellSize;
 
-  this.neighbours = (x, y) => {
-    let amountOfNeighbours = 0;
-    let cellPos = createVector(x, y);
 
-    for (cell in neighbourhood) {
-      let neighbour = p5.Vector.add(cellPos, neighbourhood[cell]);
-      if (this.grid.checkCell(neighbour.x, neighbour.y)) {
-        amountOfNeighbours++;
-      }
-    }
-    return amountOfNeighbours;
-
-  }
 
   this.update = () => {
-    let newGrid = []
-    for (cellX in this.grid.cells) {
-      let column = [];
-      for (cellY in this.grid.cells[cellX]) {
-        column.push(false);
-        if (this.grid.checkCell(cellX, cellY)) {
-          switch (this.neighbours(cellX, cellY)) {
-            case 2:
-              column.push(this.grid.checkCell(cellX, cellY));
-              break;
+    let newGrid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
+    for (cellX in this.grid.cells.length) {
+      for (cellY in this.grid.cells[cellX].length) {
+        console.log(cellX, cellY)
+        switch (this.grid.neighbours(cellX, cellY)) {
+          case 2:
+            if (this.grid.checkCell(cellX, cellY)){
+              this.newGrid.addCell(cellX, cellY, true);
+            }
+            break;
 
-            case 3:
-              if (!this.grid.checkCell(cellX, cellY)){
-                column.push(true);
-              }
-              break;
+          case 3:
+            console.log(this.grid.checkCell(cellX, cellY), "hey")
+            if (!this.grid.checkCell(cellX, cellY)){
+              this.newGrid.addCell(cellX, cellY, true)
+            }
+            break;
 
-            default:
-              column.push(false);
-              break;
+          default:
+            break;
 
-          }
         }
       }
-      newGrid.push(column);
     }
-    this.grid.cells = newGrid
+    console.log(newGrid)
+    this.grid = newGrid;
   }
 
   this.display = () => { // displays the grid on the canvas
@@ -111,6 +116,7 @@ function grid(cellSize, rows, columns) {
     }
   }
 }
+
 
 function mousePressed() {
   let cellX = floor(mouseX/currentMap.cellSize);

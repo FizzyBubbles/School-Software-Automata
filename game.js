@@ -52,11 +52,14 @@ function constructGrid(rows, columns) { // creates a new 2d array using for loop
 }
 
 class Neighbourhood {
-  constructor(neighbours) { //takes an array of neighbours
+  constructor(neighbours) { //takes an array of neighbours converts them to vectors
     this.neighbours = [];
     for (let neighbourIndex in neighbours) {
       this.neighbours.push( createVector(neighbours[neighbourIndex][0], neighbours[neighbourIndex][1]) );
     }
+  }
+  add(x, y) {
+    this.neighbours.push(createVector(x, y));
   }
 }
 

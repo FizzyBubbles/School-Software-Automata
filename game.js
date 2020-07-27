@@ -2,9 +2,14 @@ let currentMap = []; //must be an array()
 let gridSize;
 let neighbourhood;
 let play = false;
+
 function setup() {
   gridSize = createVector(500, 500);
-  createCanvas(gridSize.x, gridSize.y);
+  var Canvas = createCanvas(gridSize.x, gridSize.y);
+  Canvas.parent('container');
+  Canvas.style('position', 'relative');
+  Canvas.style('order', '0');
+  Canvas.style('top', '0');
   currentMap = new grid(25);
   currentMap.display();
 }
@@ -18,11 +23,20 @@ function isInside(x, y, w, h) { // checks whether mouse is inside a box of speci
 }
 
 function keyPressed() {
+  // plays and pauses simulation
   if (keyCode === 32 && play) {
     play = false;
   } else if (keyCode === 32) {
     play = true;
   }
+
+  // open and close sideMenu
+  if (keyCode === 13 && document.getElementById('sideMenu').style.width !== '30%') {
+    $('#sideMenu').css('width', '30%');
+  } else if (keyCode === 13) {
+    $('#sideMenu').css('width', '0%');
+  }
+
 }
 
 function constructGrid(rows, columns) { // creates a new 2d array using for loops
@@ -32,9 +46,24 @@ function constructGrid(rows, columns) { // creates a new 2d array using for loop
     for (let cellY = 0; cellY < columns; cellY++) {
       column.push(false); // adds the default state false into the columns
     }
-    grid.push(column); //
+    grid.push(column);
   }
   return grid;
+}
+
+class Neighbourhood {
+  constructor(neighbours) { //takes an array of neighbours
+    this.neighbours = [];
+    for (let neighbourIndex in neighbours) {
+      this.neighbours.push( createVector(neighbours[neighbourIndex][0], neighbours[neighbourIndex][1]) );
+    }
+  }
+}
+
+class Rules {
+  constructor() {
+
+  }
 }
 
 class Grid {
@@ -50,14 +79,15 @@ class Grid {
   flipCellState(x, y) {
     this.cells[x][y] = !this.cells[x][y];
   }
-  neighbours(x, y) {
-    neighbourhood = [createVector(-1, -1), createVector(-1, 0), createVector(-1, 1), createVector(0, -1), createVector(0, 1), createVector(1, -1), createVector(1, 0), createVector(1, 1)];
+  neighbours(x, y) { // returns the amount of neighbours of a given cell in the grid
+    //neighbourhood = [createVector(-1, -1), createVector(-1, 0), createVector(-1, 1), createVector(0, -1), createVector(0, 1), createVector(1, -1), createVector(1, 0), createVector(1, 1)];
+    neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]);
     let amountOfNeighbours = 0;
     let cellPos = createVector(x, y);
     let cell;
 
-    for (cell in neighbourhood) {
-      let neighbour = p5.Vector.add(cellPos, neighbourhood[cell]);
+    for (cell in neighbourhood.neighbours) {
+      let neighbour = p5.Vector.add(cellPos, neighbourhood.neighbours[cell]);
       if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length)
 
         if (this.checkCell(neighbour.x, neighbour.y)) {
@@ -73,12 +103,15 @@ class Grid {
 
 function grid(cellSize, rows, columns) {
   this.grid;
+
   if (rows && columns) {
     this.grid = new Grid(rows, columns);
   } else {
     this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
   }
+
   this.cellSize = cellSize;
+  this.state = {alive: color('black'), dead: color('white')}
 
   this.iterate = () => {
     this.update();
@@ -114,29 +147,46 @@ function grid(cellSize, rows, columns) {
   this.display = () => { // displays the grid on the canvas
     for (let x = 0;  x < this.grid.cells.length; x++) {
       for (let y = 0;  y < this.grid.cells[x].length; y++) {
+        let state;
         if (this.grid.checkCell(x, y)) {
-          fill('black');
+          state = 'alive'
         } else {
-          fill('white');
+          state = 'dead'
         }
+        // if (x == mouseHoverCellX && y == mouseHoverCellY) {
+        //   state.setAlpha(20);
+        // }
+        fill(this.state[state]);
         square(x * this.cellSize, y * this.cellSize, this.cellSize);
       }
     }
   }
 }
 
+// click handling
+let clickState; // stores the initial state of a click
+var mouseHoverCellX = floor(mouseX/currentMap.cellSize);
+var mouseHoverCellY = floor(mouseY/currentMap.cellSize);
 
 function mousePressed() {
-  let cellX = floor(mouseX/currentMap.cellSize);
-  let cellY = floor(mouseY/currentMap.cellSize);
-  currentMap.grid.flipCellState(cellX, cellY);
+  currentMap.grid.flipCellState(mouseHoverCellX, mouseHoverCellY);
+  clickState = currentMap.grid.checkCell(mouseHoverCellX, mouseHoverCellY);
+  currentMap.display();
+}
+
+function mouseDragged() {
+  currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, clickState);
   currentMap.display();
 }
 
 
+
 function draw() {
-  //background(0);
+  mouseHoverCellX = floor(mouseX/currentMap.cellSize);
+  mouseHoverCellY = floor(mouseY/currentMap.cellSize);
   if (frameCount%10 == 0 && play) {
     currentMap.iterate();
+  } else {
+    currentMap.display();
   }
 }

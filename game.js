@@ -108,7 +108,7 @@ let GOL = new RuleSet();
 class Grid {
   constructor(rows, columns){
     this.cells = constructGrid(rows, columns)
-    this.neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]);
+    this.neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]); // temporary
   }
   addCell(x, y, state) {
     this.cells[x][y] = state;
@@ -137,6 +137,13 @@ class Grid {
 
     return amountOfNeighbours;
 
+  }
+}
+
+class State {
+  constructor (colour, id) {
+    this.colour = colour;
+    this.id = id;
   }
 }
 

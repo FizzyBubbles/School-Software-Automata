@@ -3,7 +3,7 @@ let gridSize;
 let neighbourhood;
 let play = false;
 function setup() {
-  gridSize = createVector(500, 500);
+  gridSize = createVector(0.7*windowWidth, windowHeight);
   var Canvas = createCanvas(gridSize.x, gridSize.y);
   Canvas.parent('container');
   Canvas.style('position', 'relative');
@@ -72,10 +72,8 @@ class Rule {
   }
   check(x, y, grid) { //returns whether to apply the rule and what state it should be
     let output = [false, this.initialState];
-    if (grid.checkCell(x, y) === this.initialState) {
-      if (this.lowerBound <= grid.neighbours(x, y, this.stateOfCells) && grid.neighbours(x, y, this.stateOfCells) <= this.upperBound) {
-        output = [true, this.finalState];
-      }
+    if (grid.checkCell(x, y) === this.initialState && this.lowerBound <= grid.neighbours(x, y, this.stateOfCells) && grid.neighbours(x, y, this.stateOfCells) <= this.upperBound) {
+      output = [true, this.finalState];
     }
     return output;
   }
@@ -107,7 +105,7 @@ let GOL = new RuleSet();
 
 class Grid {
   constructor(rows, columns){
-    this.cells = constructGrid(rows, columns)
+    this.cells = constructGrid(rows, columns);
     this.neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]); // temporary
   }
   addCell(x, y, state) {
@@ -128,10 +126,8 @@ class Grid {
 
     for (cell in this.neighbourhood.neighbours) {
       let neighbour = p5.Vector.add(cellPos, this.neighbourhood.neighbours[cell]);
-      if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length) {
-        if (this.checkCell(neighbour.x, neighbour.y) === state) {
-          amountOfNeighbours++;
-        }
+      if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length && this.checkCell(neighbour.x, neighbour.y) === state) {
+        amountOfNeighbours++;
       }
     }
 

@@ -2,16 +2,6 @@ let currentMap = []; //must be an array()
 let gridSize;
 let neighbourhood;
 let play = false;
-function setup() {
-  gridSize = createVector(0.7*windowWidth, windowHeight);
-  var Canvas = createCanvas(gridSize.x, gridSize.y);
-  Canvas.parent('container');
-  Canvas.style('position', 'relative');
-  Canvas.style('order', '0');
-  Canvas.style('top', '0');
-  currentMap = new grid(25);
-  currentMap.display();
-}
 
 function isInside(x, y, w, h) { // checks whether mouse is inside a box of specified size and location
   if(mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
@@ -80,8 +70,13 @@ class Rule {
 }
 
 class RuleSet {
-  constructor() {
+  constructor(state) {
     this.rules = [birth, deathByCrowding, deathByLonelyness];
+    this.states = {}; // adds a record of what the states are
+    for (let i in state) {
+      this.states[state[i][0]] = state[i][1];
+    }
+
   }
   addRule(rule) {
     this.rules.push(rule);
@@ -100,7 +95,7 @@ class RuleSet {
 let deathByLonelyness = new Rule(true, 0, 1, true, false);
 let deathByCrowding = new Rule(true, 4, 8, true, false);
 let birth = new Rule(false, 3, 3, true, true);
-let GOL = new RuleSet();
+let GOL = new RuleSet([['dead', 'white'], ['alive', 'black']]);
 
 
 class Grid {
@@ -136,24 +131,21 @@ class Grid {
   }
 }
 
-class State {
-  constructor (colour, id) {
-    this.colour = colour;
-    this.id = id;
-  }
+function setup() {
+  gridSize = createVector(0.7*windowWidth, windowHeight);
+  var Canvas = createCanvas(gridSize.x, gridSize.y);
+  Canvas.parent('container');
+  Canvas.style('position', 'relative');
+  Canvas.style('order', '0');
+  Canvas.style('top', '0');
+  currentMap = new grid(25, GOL);
+  currentMap.display();
 }
 
-function grid(cellSize, rows, columns) {
-  this.grid;
-
-  if (rows && columns) {
-    this.grid = new Grid(rows, columns);
-  } else {
-    this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
-  }
-
+function grid(cellSize, ruleSet) {
+  this.ruleSet = ruleSet;
+  this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
   this.cellSize = cellSize;
-  this.state = {alive: color('black'), dead: color('white')}
 
   this.iterate = () => {
     this.update();
@@ -164,7 +156,7 @@ function grid(cellSize, rows, columns) {
     let newGrid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
     for (let cellX = 0; cellX < this.grid.cells.length; cellX++) {
       for (let cellY = 0; cellY < this.grid.cells[cellX].length; cellY++) {
-        newGrid.addCell(cellX, cellY, GOL.checkRules(cellX, cellY, this.grid));
+        newGrid.addCell(cellX, cellY, this.ruleSet.checkRules(cellX, cellY, this.grid));
       }
     }
     this.grid = newGrid;
@@ -182,7 +174,7 @@ function grid(cellSize, rows, columns) {
         // if (x == mouseHoverCellX && y == mouseHoverCellY) {
         //   state.setAlpha(20);
         // }
-        fill(this.state[state]);
+        fill(this.ruleSet.states[state]);
         square(x * this.cellSize, y * this.cellSize, this.cellSize);
       }
     }

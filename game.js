@@ -60,9 +60,9 @@ class Rule {
     this.stateOfCells = stateOfCells;
     this.finalState = finalState;
   }
-  check(x, y, grid) { //returns whether to apply the rule and what state it should be
+  check(x, y, grid, neighbourhood) { //returns whether to apply the rule and what state it should be
     let output = [false, this.initialState];
-    if (grid.checkCell(x, y) === this.initialState && this.lowerBound <= grid.neighbours(x, y, this.stateOfCells) && grid.neighbours(x, y, this.stateOfCells) <= this.upperBound) {
+    if (grid.checkCell(x, y) === this.initialState && this.lowerBound <= grid.neighbours(x, y, this.stateOfCells, neighbourhood) && grid.neighbours(x, y, this.stateOfCells, neighbourhood) <= this.upperBound) {
       output = [true, this.finalState];
     }
     return output;
@@ -76,15 +76,17 @@ class RuleSet {
     for (let i in state) {
       this.states[state[i][0]] = state[i][1];
     }
+    this.neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]); // temporary
 
   }
   addRule(rule) {
     this.rules.push(rule);
   }
   checkRules(x, y, grid) {
+    console.log(this.neighbourhood)
     for (let i in this.rules) {
-      if (this.rules[i].check(x, y, grid)[0]) {
-        return (this.rules[i].check(x, y, grid)[1]);
+      if (this.rules[i].check(x, y, grid, this.neighbourhood)[0]) {
+        return (this.rules[i].check(x, y, grid, this.neighbourhood)[1]);
         break;
       }
     }
@@ -94,11 +96,11 @@ class RuleSet {
 
 
 //game of life
-
+let GOL;
 let deathByLonelyness = new Rule(true, 0, 1, true, false);
 let deathByCrowding = new Rule(true, 4, 8, true, false);
 let birth = new Rule(false, 3, 3, true, true);
-let GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCrowding, deathByLonelyness]);
+
 
 // rule 30
 
@@ -106,7 +108,6 @@ let GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCr
 class Grid {
   constructor(rows, columns){
     this.cells = constructGrid(rows, columns);
-    this.neighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]); // temporary
   }
   addCell(x, y, state) {
     this.cells[x][y] = state;
@@ -118,14 +119,13 @@ class Grid {
     this.cells[x][y] = !this.cells[x][y];
   }
 
-  neighbours(x, y, state) { // returns the amount of neighbours of a given cell in the grid
-    //neighbourhood = [createVector(-1, -1), createVector(-1, 0), createVector(-1, 1), createVector(0, -1), createVector(0, 1), createVector(1, -1), createVector(1, 0), createVector(1, 1)];
+  neighbours(x, y, state, neighbourhood) { // returns the amount of neighbours of a given cell in the grid
     let amountOfNeighbours = 0;
     let cellPos = createVector(x, y);
     let cell;
 
-    for (cell in this.neighbourhood.neighbours) {
-      let neighbour = p5.Vector.add(cellPos, this.neighbourhood.neighbours[cell]);
+    for (cell in neighbourhood.neighbours) {
+      let neighbour = p5.Vector.add(cellPos, neighbourhood.neighbours[cell]);
       if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length && this.checkCell(neighbour.x, neighbour.y) === state) {
         amountOfNeighbours++;
       }
@@ -143,6 +143,10 @@ function setup() {
   Canvas.style('position', 'relative');
   Canvas.style('order', '0');
   Canvas.style('top', '0');
+
+  // game of life
+  GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCrowding, deathByLonelyness]);
+
   currentMap = new grid(25, GOL);
   currentMap.display();
   // move this later
@@ -154,7 +158,7 @@ function setup() {
 
 function grid(cellSize, ruleSet) {
   this.ruleSet = ruleSet;
-  this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
+  this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize), ruleSet.neighbourhood);
   this.cellSize = cellSize;
 
   this.iterate = () => {

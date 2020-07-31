@@ -11,13 +11,17 @@
       float: right;
       height: 100%;
       width: 0;
-      background-color: black;
+      background-color: grey;
       z-index: 1;
       position: fixed;
       top: 0;
       right: 0;
       overflow-x: hidden;
       transition: 0.5s;
+    }
+    .square {
+      height: 25px;
+      width: 25px;
     }
     #headerBar {
       color: white;
@@ -26,8 +30,9 @@
       justify-content: center;
     }
   </style>
-   <script src="p5.js"></script>
-   <script src="jquery-3.5.1.js"></script>
+  <script src="p5.js"></script>
+  <script src="jquery-3.5.1.js"></script>
+
 </head>
 <body>
   <div id="container" class="container">
@@ -40,6 +45,6 @@
       </div>
     </div>
   </div>
-
+  <script src="classes.js"></script>
   <script src="game.js"></script>
 </html>

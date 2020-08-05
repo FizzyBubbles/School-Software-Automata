@@ -3,14 +3,6 @@ let gridSize;
 let neighbourhood;
 let play = false;
 
-function isInside(x, y, w, h) { // checks whether mouse is inside a box of specified size and location
-  if(mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function keyPressed() {
   // plays and pauses simulation
   if (keyCode === 32 && play) {
@@ -28,17 +20,7 @@ function keyPressed() {
 
 }
 
-function constructGrid(rows, columns) { // creates a new 2d array using for loops
-  let grid = [];
-  for (let cellX = 0; cellX < rows; cellX++) {
-    let column = [];
-    for (let cellY = 0; cellY < columns; cellY++) {
-      column.push(false); // adds the default state false into the columns
-    }
-    grid.push(column);
-  }
-  return grid;
-}
+
 
 class Neighbourhood {
   constructor(neighbours) { //takes an array of neighbours converts them to vectors
@@ -83,7 +65,6 @@ class RuleSet {
     this.rules.push(rule);
   }
   checkRules(x, y, grid) {
-    console.log(this.neighbourhood)
     for (let i in this.rules) {
       if (this.rules[i].check(x, y, grid, this.neighbourhood)[0]) {
         return (this.rules[i].check(x, y, grid, this.neighbourhood)[1]);
@@ -102,8 +83,21 @@ let deathByCrowding = new Rule(true, 4, 8, true, false);
 let birth = new Rule(false, 3, 3, true, true);
 
 
-// rule 30
+//brians brain
+let BB;
+let BBirth = ['dead']
 
+function constructGrid(rows, columns) { // creates a new 2d array using for loops
+  let grid = [];
+  for (let cellX = 0; cellX < rows; cellX++) {
+    let column = [];
+    for (let cellY = 0; cellY < columns; cellY++) {
+      column.push('dead'); // adds the default state into the columns
+    }
+    grid.push(column);
+  }
+  return grid;
+}
 
 class Grid {
   constructor(rows, columns){
@@ -115,10 +109,6 @@ class Grid {
   checkCell(x, y) {
     return this.cells[x][y];
   }
-  flipCellState(x, y) {
-    this.cells[x][y] = !this.cells[x][y];
-  }
-
   neighbours(x, y, state, neighbourhood) { // returns the amount of neighbours of a given cell in the grid
     let amountOfNeighbours = 0;
     let cellPos = createVector(x, y);
@@ -136,29 +126,10 @@ class Grid {
   }
 }
 
-function setup() {
-  gridSize = createVector(0.7*windowWidth, windowHeight);
-  var Canvas = createCanvas(gridSize.x, gridSize.y);
-  Canvas.parent('container');
-  Canvas.style('position', 'relative');
-  Canvas.style('order', '0');
-  Canvas.style('top', '0');
-
-  // game of life
-  GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCrowding, deathByLonelyness]);
-
-  currentMap = new grid(25, GOL);
-  currentMap.display();
-  // move this later
-  for (let state in currentMap.ruleSet.states) {
-    $('#statisticBar').append('<div class="square" id="' + state + '"></div>');
-    $('#' + state).css('background-color', currentMap.ruleSet.states[state])
-  }
-}
-
 function grid(cellSize, ruleSet) {
   this.ruleSet = ruleSet;
-  this.grid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize), ruleSet.neighbourhood);
+  console.log('dead')
+  this.grid = new Grid( floor(gridSize.x/cellSize), floor(gridSize.y/cellSize), ruleSet.neighbourhood);
   this.cellSize = cellSize;
 
   this.iterate = () => {
@@ -195,15 +166,40 @@ function grid(cellSize, ruleSet) {
   }
 }
 
+function setup() {
+  gridSize = createVector(0.7*windowWidth, windowHeight);
+  var Canvas = createCanvas(gridSize.x, gridSize.y);
+  Canvas.parent('container');
+  Canvas.style('position', 'relative');
+  Canvas.style('order', '0');
+  Canvas.style('top', '0');
+
+  // game of life
+  GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCrowding, deathByLonelyness]);
+  BB = new RuleSet([['dead', 'white'], ['dying', 'blue'], ['alive', 'black']], [])
+
+  currentMap = new grid(25, GOL);
+  currentMap.display();
+  // move this later
+  for (let state in currentMap.ruleSet.states) {
+    $('#statisticBar').append('<div class="square" id="' + state + '"></div>');
+    $('#' + state).css('background-color', currentMap.ruleSet.states[state]);
+  }
+}
+
+
 // click handling
-let clickState; // stores the initial state of a click
+let clickState = 'dead'; // stores the initial state of a click
 var mouseHoverCellX = floor(mouseX/currentMap.cellSize);
 var mouseHoverCellY = floor(mouseY/currentMap.cellSize);
 
 function mousePressed() {
-  currentMap.grid.flipCellState(mouseHoverCellX, mouseHoverCellY);
+  if (Object.keys(currentMap.ruleSet.states).length == 2) {
+    currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, Object.keys(currentMap.ruleSet.states));
+  }
   clickState = currentMap.grid.checkCell(mouseHoverCellX, mouseHoverCellY);
   currentMap.display();
+
 }
 
 function mouseDragged() {

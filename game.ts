@@ -19,150 +19,19 @@ function keyPressed() {
   }
 
 }
-
-//
-// class Neighbourhood {
-//   constructor(neighbours) { //takes an array of neighbours
-//     this.neighbours = [neighbours];
-//   }
-//   add(x, y) { // add edge case of double inputs
-//     this.neighbours.push([x, y]);
-//   }
-//   remove(x, y) {
-//     this.neighbours = removeElement([x, y])
-//   }
-// }
-//
-// class Rule {
-//   constructor(initialState, lowerBound, upperBound, stateOfCells, finalState, neighbourhood) { //
-//     this.initialState = initialState;
-//     this.lowerBound = lowerBound;
-//     this.upperBound = upperBound;
-//     this.stateOfCells = stateOfCells;
-//     this.finalState = finalState;
-//     this.neighbourhood = neighbourhood;
-//   }
-//   check(x, y, grid, neighbourhood) { //returns whether to apply the rule and what state it should be
-//     let output = [false, this.initialState];
-//     if (grid.checkCell(x, y) === this.initialState && this.lowerBound <= grid.neighbours(x, y, this.stateOfCells, neighbourhood) && grid.neighbours(x, y, this.stateOfCells, neighbourhood) <= this.upperBound) {
-//       output = [true, this.finalState];
-//     }
-//     return output;
-//   }
-// }
-
-// class RuleSet {
-//   constructor(state, rules) {
-//     this.rules = rules;
-//     this.states = {}; // adds a record of what the states are
-//     for (let i in state) {
-//       this.states[state[i][0]] = state[i][1];
-//     }
-//     this.neighbourhood = mooreNeighbourhood // temporary
-//
-//   }
-//   addRule(rule) {
-//     this.rules.push(rule);
-//   }
-//   checkRules(x, y, grid) {
-//     for (let i in this.rules) {
-//       if (this.rules[i].check(x, y, grid, this.neighbourhood)[0]) {
-//         return (this.rules[i].check(x, y, grid, this.neighbourhood)[1]);
-//         break;
-//       }
-//     }
-//     return grid.checkCell(x, y);
-//   }
-// }
-
-let mooreNeighbourhood = new Neighbourhood([[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]);
-
-//game of life
-let GOL;
-let deathByLonelyness = new Rule(true, 0, 1, true, false, mooreNeighbourhood);
-let deathByCrowding = new Rule(true, 4, 8, true, false, mooreNeighbourhood);
-let birth = new Rule(false, 3, 3, true, true, mooreNeighbourhood);
-
-
-//brians brain
-let BB;
-let BBirth = ['dead']
-
-function constructGrid(rows, columns) { // creates a new 2d array using for loops
-  let grid = [];
-  for (let cellX = 0; cellX < rows; cellX++) {
+const constructGrid = (rows: number, columns:number): Grid => { // creates a new 2d array using for loops
+  let gridMatrix = [];
+  for (let x = 0; x < rows; x++) {
     let column = [];
-    for (let cellY = 0; cellY < columns; cellY++) {
+    for (let y = 0; y < columns; y++) {
       column.push('dead'); // adds the default state into the columns
     }
-    grid.push(column);
+    gridMatrix.push(column);
   }
-  return grid;
+  return {matrix: gridMatrix};
 }
 
-// class Grid {
-//   constructor(rows, columns){
-//     this.cells = constructGrid(rows, columns);
-//   }
-//   checkCell(x, y) {
-//     return this.cells[x][y];
-//   }
-//   neighbours(x, y, state, neighbourhood) { // returns the amount of neighbours of a given cell in the grid
-//     let amountOfNeighbours = 0;
-//     let cellPos = createVector(x, y);
-//     let cell;
-//
-//     for (cell in neighbourhood.neighbours) {
-//       let neighbour = p5.Vector.add(cellPos, neighbourhood.neighbours[cell]);
-//       if (neighbour.x >= 0 && neighbour.y >= 0 && neighbour.x < this.cells.length && neighbour.y < this.cells.length && this.checkCell(neighbour.x, neighbour.y) === state) {
-//         amountOfNeighbours++;
-//       }
-//     }
-//
-//     return amountOfNeighbours;
-//
-//   }
-// }
-//
-// function grid(cellSize, ruleSet) {
-//   // this.ruleSet = ruleSet;
-//   // this.grid = new Grid( floor(gridSize.x/cellSize), floor(gridSize.y/cellSize), ruleSet.neighbourhood);
-//   // this.cellSize = cellSize;
-//   //
-//   // this.iterate = () => {
-//   //   this.update();
-//   //   this.display();
-//   // }
-//
-//   // this.update = () => {
-//   //   let newGrid = new Grid(floor(gridSize.x/cellSize), floor(gridSize.y/cellSize));
-//   //   for (let cellX = 0; cellX < this.grid.cells.length; cellX++) {
-//   //     for (let cellY = 0; cellY < this.grid.cells[cellX].length; cellY++) {
-//   //       newGrid.addCell(cellX, cellY, this.ruleSet.checkRules(cellX, cellY, this.grid));
-//   //     }
-//   //   }
-//   //   this.grid = newGrid;
-//   // }
-//   //
-//   // this.display = () => { // displays the grid on the canvas
-//   //   for (let x = 0;  x < this.grid.cells.length; x++) {
-//   //     for (let y = 0;  y < this.grid.cells[x].length; y++) {
-//   //       let state;
-//   //       if (this.grid.checkCell(x, y)) {
-//   //         state = 'alive';
-//   //       } else {
-//   //         state = 'dead';
-//   //       }
-//   //       // if (x == mouseHoverCellX && y == mouseHoverCellY) {
-//   //       //   state.setAlpha(20);
-//   //       // }
-//   //       fill(this.ruleSet.states[state]);
-//   //       square(x * this.cellSize, y * this.cellSize, this.cellSize);
-//   //     }
-//   //   }
-//   // }
-// }
-
+// stores the colour mapping from state to colour.
 var colourLibrary = {'dead': 'black', 'alive': 'white'};
 
 const getStateColour = (state: CellState) => colourLibrary[state];
@@ -178,15 +47,15 @@ const displayCell = (cell: Cell) => {
 };
 
 const displayGrid = (grid:Grid) => {
+  //loop through every position on the grid matrix
   for (let x = 0;  x < grid.matrix.length; x++) {
     for (let y = 0;  y < grid.matrix[x].length; y++) {
-      // let state;
-      // if (this.grid.checkCell(x, y){
-      //   state = 'alive';
-      // } state = 'dead';
-      // fill(this.ruleSet.states[state]);
-      // square(x * this.cellSize, y * this.cellSize, this.cellSize);
-      displayCell({ state: getCellStateFromGrid( grid, { x, y } ), pos: { x, y } })
+      // display each cell
+      const currentCellState = getCellStateFromGrid( grid, { x, y } );
+      displayCell({
+        state: currentCellState,
+        pos: { x, y }
+      })
     }
   }
 };
@@ -210,11 +79,12 @@ type Vector = {
 type Grid = {
   matrix: CellState[][];
 };
+type Neighbourhood = Vector[];
 
 const getCellNeighbours = (
   grid: Grid,
   coord: Coord,
-  neighbourhood: Vector[]
+  neighbourhood: Neighbourhood
 ): CellState[] => {
   const { x, y } = coord;
   // Returns all CellStates around a coordinate
@@ -228,7 +98,7 @@ const getCellNeighbours = (
 const getNumNeighboursWithState = (
   grid: Grid,
   coord: Coord,
-  neighbourhood: Vector[],
+  neighbourhood: Neighbourhood,
   desiredState: CellState
 ): number => {
   // goes through every cell in neighbour
@@ -253,7 +123,7 @@ type RuleParameters = {
   initialCellState: CellState;
   finalCellState: CellState;
   desiredStateCountBounds: Bound;
-  neighbourhood: Vector[];
+  neighbourhood: Neighbourhood;
   requiredNeighbourState: CellState;
 };
 type RuleFunction = (grid: Grid, coord: Coord) => CellState;
@@ -296,16 +166,22 @@ const createRule = (params: RuleParameters) => {
   return rule;
 };
 
+
+
 const applyRule = (oldGrid: Grid, rule: RuleFunction): Grid => {
   // create new grid based on applying the rule
-  const newGrid: Grid = { matrix: [[]] };
   // iterate through each position in old grid
   // allPositions youll need to provide
-  for (x in (0).WIDTH) {
-    for (y in (0).HEIGHT) {
-      newGrid[x][y] = rule(oldGrid, { x, y });
+  let newGrid: Grid;
+  for (let x = 0; x < oldGrid.matrix.length; x++) {
+    let column: CellState[];
+    for (let y = 0; x < oldGrid.matrix.length[x]; y++) {
+       column.push(rule(oldGrid, { x, y }));
     }
+    newGrid.matrix.push(column);
   }
+
+  return newGrid;
 };
 
 type RuleSet = RuleFunction[];

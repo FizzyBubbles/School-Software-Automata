@@ -86,7 +86,7 @@ const getCellNeighbours = (
   // Returns all CellStates around a coordinate
   return neighbourhood.map(
     (v: Vector): CellState => {
-      return grid[x + v.x][y + v.y];
+      return grid.matrix[x + v.x][y + v.y];
     }
   );
 };
@@ -104,6 +104,8 @@ const getNumNeighboursWithState = (
 
   return neighboursWithState.length;
 };
+
+const checkWithinBounds = (n: number, bounds: Bound) => (bounds.lower <= n && n <= bounds.upper);
 
 const getCellStateFromGrid = (grid: Grid, { x, y }: Coord) => grid.matrix[x][y];
 

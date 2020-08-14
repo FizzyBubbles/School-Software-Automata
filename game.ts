@@ -1,7 +1,5 @@
-let currentMap = []; //must be an array()
-let gridSize;
-let neighbourhood;
 let play = false;
+
 
 function keyPressed() {
   // plays and pauses simulation
@@ -48,8 +46,8 @@ const displayCell = (cell: Cell) => {
 
 const displayGrid = (grid:Grid) => {
   //loop through every position on the grid matrix
-  for (let x = 0;  x < grid.matrix.length; x++) {
-    for (let y = 0;  y < grid.matrix[x].length; y++) {
+  for (let x = 0;  x < grid.length; x++) {
+    for (let y = 0;  y < grid[x].length; y++) {
       // display each cell
       const currentCellState = getCellStateFromGrid( grid, { x, y } );
       displayCell({
@@ -76,9 +74,7 @@ type Vector = {
   x: number;
   y: number;
 };
-type Grid = {
-  matrix: CellState[][];
-};
+type Grid = CellState[][];
 type Neighbourhood = Vector[];
 
 const getCellNeighbours = (
@@ -90,7 +86,7 @@ const getCellNeighbours = (
   // Returns all CellStates around a coordinate
   return neighbourhood.map(
     (v: Vector): CellState => {
-      return grid.matrix[x + v.x][y + v.y];
+      return grid[x + v.x][y + v.y];
     }
   );
 };
@@ -104,9 +100,6 @@ const getNumNeighboursWithState = (
   // goes through every cell in neighbour
   const neighbours = getCellNeighbours(grid, coord, neighbourhood);
 
-  /* const neighboursWithState = neighbours.filter( */
-  /*   (neighbourCellState: CellState) => neighbourCellState === desiredState */
-  /* ); */
   const neighboursWithState = neighbours.filter(isState(desiredState));
 
   return neighboursWithState.length;
@@ -172,16 +165,18 @@ const applyRule = (oldGrid: Grid, rule: RuleFunction): Grid => {
   // create new grid based on applying the rule
   // iterate through each position in old grid
   // allPositions youll need to provide
-  let newGrid: Grid;
+  let newGrid: Grid = [];
+  console.log(oldGrid.matrix.length)
   for (let x = 0; x < oldGrid.matrix.length; x++) {
-    let column: CellState[];
-    for (let y = 0; x < oldGrid.matrix.length[x]; y++) {
-       column.push(rule(oldGrid, { x, y }));
+    let column: CellState[] = [];
+    for (let y = 0; y < oldGrid.matrix[x].length; y++) {
+      const newCell = rule(oldGrid, {x:x, y:y});
+       column.push(newCell);
     }
-    newGrid.matrix.push(column);
+    newGrid.push(column);
   }
 
-  return newGrid;
+  return {matrix: newGrid};
 };
 
 type RuleSet = RuleFunction[];
@@ -192,54 +187,91 @@ const updateGrid = (oldGrid: Grid, ruleSet: RuleSet) => ruleSet.reduce(
   oldGrid
 );
 
+const iterateAndDisplayGrid = (oldGrid: Grid, ruleSet: RuleSet): Grid => {
+  const newGrid = updateGrid(oldGrid, ruleSet);
+  displayGrid(newGrid);
+  return newGrid;
+}
+
+var gridSize: Vector;
+var gameGrid: Grid;
+var mooreNeighbourhood: Neighbourhood;
+
+//game of life
+var deathByLonelyness: RuleFunction;
+var deathByCrowding: RuleFunction;
+var birth: RuleFunction;
+
+var GOL: RuleSet;
+
+
 function setup() {
   var Canvas = createCanvas(0.7*windowWidth, windowHeight);
   Canvas.parent('container');
   Canvas.style('position', 'relative');
   Canvas.style('order', '0');
   Canvas.style('top', '0');
+  gridSize  = {x:30, y:30};
+  gameGrid = constructGrid(gridSize.x, gridSize.y);
+  mooreNeighbourhood = [{x:-1, y:-1}, {x:-1, y:0}, {x:-1, y: 1}, {x:0, y:-1}, {x:0, y:1}, {x:1, y:-1}, {x:1, y:0}, {x:1, y:1}];
+  deathByLonelyness = createRule({
+    initialCellState: 'alive',
+    finalCellState: 'dead',
+    desiredStateCountBounds: { lower: 0, upper: 1 },
+    neighbourhood: mooreNeighbourhood,
+    requiredNeighbourState: 'alive'
+  });
+  deathByCrowding = createRule({
+    initialCellState: 'alive',
+    finalCellState: 'dead',
+    desiredStateCountBounds: { lower: 4, upper: 8 },
+    neighbourhood: mooreNeighbourhood,
+    requiredNeighbourState: 'dead'
+  });
+  birth = createRule({
+    initialCellState: 'dead',
+    finalCellState: 'alive',
+    desiredStateCountBounds: { lower: 3, upper: 3 },
+    neighbourhood: mooreNeighbourhood,
+    requiredNeighbourState: 'alive'
+  });
 
-  // game of life
-  GOL = new RuleSet([['dead', 'white'], ['alive', 'black']], [birth, deathByCrowding, deathByLonelyness]);
-  BB = new RuleSet([['dead', 'white'], ['dying', 'blue'], ['alive', 'black']], [])
+  GOL = [deathByLonelyness, deathByCrowding, birth];
 
-  currentMap = new grid(25, GOL);
-  currentMap.display();
+
   // move this later
-  for (let state in currentMap.ruleSet.states) {
-    $('#statisticBar').append('<div class="square" id="' + state + '"></div>');
-    $('#' + state).css('background-color', currentMap.ruleSet.states[state]);
-  }
+  // for (let state in GOL) {
+  //   $('#statisticBar').append('<div class="square" id="' + state + '"></div>');
+  //   $('#' + state).css('background-color', currentMap.ruleSet.states[state]);
+  // }
 }
 
 
 // click handling
 let clickState = 'dead'; // stores the initial state of a click
-var mouseHoverCellX = floor(mouseX/currentMap.cellSize);
-var mouseHoverCellY = floor(mouseY/currentMap.cellSize);
+var mouseHoverCellX = floor(mouseX/20);
+var mouseHoverCellY = floor(mouseY/20);
 
 function mousePressed() {
-  if (Object.keys(currentMap.ruleSet.states).length == 2) {
-    currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, Object.keys(currentMap.ruleSet.states));
-  }
-  clickState = currentMap.grid.checkCell(mouseHoverCellX, mouseHoverCellY);
-  currentMap.display();
-
+  // if (Object.keys(states).length == 2) {
+  //   currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, Object.keys(currentMap.ruleSet.states));
+  // }
+  // clickState = currentMap.grid.checkCell(mouseHoverCellX, mouseHoverCellY);
+  // currentMap.display();
 }
 
 function mouseDragged() {
-  currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, clickState);
-  currentMap.display();
+  // currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, clickState);
+  // currentMap.display();
 }
 
-
-
 function draw() {
-  mouseHoverCellX = floor(mouseX/currentMap.cellSize);
-  mouseHoverCellY = floor(mouseY/currentMap.cellSize);
+  let updatedGrid: Grid;
+  mouseHoverCellX = floor(mouseX/20);
+  mouseHoverCellY = floor(mouseY/20);
   if (frameCount%10 == 0 && play) {
-    currentMap.iterate();
-  } else {
-    currentMap.display();
-  }
+    updatedGrid = iterateAndDisplayGrid(gameGrid, GOL);
+    console.log(GOL);
+  };
+  //gameGrid = updatedGrid;
 }

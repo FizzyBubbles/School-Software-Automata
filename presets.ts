@@ -4,23 +4,25 @@ const mooreNeighbourhood: Neighbourhood = [[-1, -1], [-1, 0], [-1, 1], [0, -1], 
 const deathByLonelyness: RuleFunction = createRule({
   initialCellState: 'alive',
   finalCellState: 'dead',
-  desiredStateCountBounds: { x: 0, y: 1 },
+  desiredStateCountBounds: { lower: 0, upper: 1 },
   neighbourhood: mooreNeighbourhood,
   requiredNeighbourState: 'alive'
 });
 const deathByCrowding: RuleFunction = createRule({
   initialCellState: 'alive',
   finalCellState: 'dead',
-  desiredStateCountBounds: { x: 4, y: 8 },
+  desiredStateCountBounds: { lower: 4, upper: 8 },
   neighbourhood: mooreNeighbourhood,
   requiredNeighbourState: 'dead'
 });
 const birth: RuleFunction = createRule({
   initialCellState: 'dead',
   finalCellState: 'alive',
-  desiredStateCountBounds: { x: 3, y: 3 },
+  desiredStateCountBounds: { lower: 3, upper: 3 },
   neighbourhood: mooreNeighbourhood,
   requiredNeighbourState: 'alive'
 });
+
+const GOL: RuleSet = [deathByLonelyness, deathByCrowding, birth];
 
 //brians brain

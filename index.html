@@ -1,51 +1,48 @@
 <html>
-<head>
-  <style>
-    .container {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      align-content: center;
-    }
-    .sideMenu {
-      float: right;
-      height: 100%;
-      width: 0;
-      background-color: grey;
-      z-index: 1;
-      position: fixed;
-      top: 0;
-      right: 0;
-      overflow-x: hidden;
-      transition: 0.5s;
-    }
-    .square {
-      height: 25px;
-      width: 25px;
-    }
-    #headerBar {
-      color: white;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-    }
-  </style>
-  <script src="p5.js"></script>
-  <script src="jquery-3.5.1.js"></script>
-
-</head>
-<body>
-  <div id="container" class="container">
-    <div id="sideMenu" class="sideMenu">
-      <div id="headerBar">
-        <h1>Game of Life</h1>
-      </div>
-      <div id='statisticBar'>
-
+  <head>
+    <style>
+      .container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+      }
+      .sideMenu {
+        float: right;
+        height: 100%;
+        width: 0;
+        background-color: grey;
+        z-index: 1;
+        position: fixed;
+        top: 0;
+        right: 0;
+        overflow-x: hidden;
+        transition: 0.5s;
+      }
+      .square {
+        height: 25px;
+        width: 25px;
+      }
+      #headerBar {
+        color: white;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+      }
+    </style>
+    <!-- <script src="p5.js"></script>
+    <script src="jquery-3.5.1.js"></script> -->
+  </head>
+  <body>
+    <div id="container" class="container">
+      <div id="sideMenu" class="sideMenu">
+        <div id="headerBar">
+          <h1>Game of Life</h1>
+        </div>
+        <div id="statisticBar"></div>
       </div>
     </div>
-  </div>
-  <!-- <script src="classes.js"></script> -->
-  <script src="game.js"></script>
-  <script src="presets.js"></script>
+    <!-- <script src="classes.js"></script> -->
+    <script src="build/game.js"></script>
+  </body>
 </html>

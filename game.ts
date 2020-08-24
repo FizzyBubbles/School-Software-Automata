@@ -102,22 +102,6 @@ const getCellNeighbours = (
   );
 };
 
-export const getNumNeighboursWithState = (
-  grid: Grid,
-  coord: Coord,
-  neighbourhood: Neighbourhood,
-  desiredState: CellState
-): number => {
-  // goes through every cell in neighbour
-  const neighbours = getCellNeighbours(grid, coord, neighbourhood);
-
-  const isDesiredState = isState(desiredState);
-
-  const neighboursWithState = neighbours.filter((n) => isDesiredState(n));
-  // console.log(coord, desiredState, neighbours, neighboursWithState);
-  return neighboursWithState.length;
-};
-
 export const createRule = (params: RuleParameters) => {
   const {
     initialCellState,
@@ -125,29 +109,7 @@ export const createRule = (params: RuleParameters) => {
     desiredStateCountBounds,
     requiredNeighbourState,
   } = params;
-  //
-  // const rule = (grid: Grid, coord: Coord): CellState => {
-  //   // don't apply if initial cell not initialCellState
-  //   const currentCellState = getCellStateFromGrid(grid, coord);
-  //
-  //   if (currentCellState !== initialCellState) {
-  //     return currentCellState;
-  //   }
-  //   // count neighbours in neighbourhood with specific state
-  //   const neighboursWithStateCount = getNumNeighboursWithState(
-  //     grid,
-  //     coord,
-  //     neighbourhood,
-  //     requiredNeighbourState
-  //   );
-  //
-  //   // if this count is within desired bounds, return finalCellState
-  //   if (isWithinBounds(neighboursWithStateCount, desiredStateCountBounds)) {
-  //     return finalCellState;
-  //   }
-  //   // if this count is not withing desired bounds, return initialCellState
-  //   return currentCellState;
-  // };
+
   const rule = (
     cellState: CellState,
     neighbourhood: CellState[]

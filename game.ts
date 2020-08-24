@@ -6,11 +6,6 @@ var gridSize: Vector;
 var gameGrid: Grid;
 var mooreNeighbourhood: Neighbourhood;
 
-//game of life
-var deathByLonelyness: RuleFunction;
-var deathByCrowding: RuleFunction;
-var birth: RuleFunction;
-
 var GOL: RuleSet;
 
 type CellState = string;
@@ -32,8 +27,14 @@ type Grid = {
   matrix: CellState[][];
 };
 export type Neighbourhood = Vector[];
-export type RuleFunction = (grid: Grid, coord: Coord) => CellState;
-export type RuleSet = RuleFunction[];
+export type RuleFunction = (
+  cellState: CellState,
+  neighbourhood: CellState[]
+) => CellState;
+export type RuleSet = {
+  rules: RuleFunction[];
+  neighbourhood: Neighbourhood;
+};
 
 type Bound = {
   lower: number;
@@ -43,7 +44,6 @@ type RuleParameters = {
   initialCellState: CellState;
   finalCellState: CellState;
   desiredStateCountBounds: Bound;
-  neighbourhood: Neighbourhood;
   requiredNeighbourState: CellState;
 };
 
@@ -55,7 +55,7 @@ const getCellStateFromGrid = (grid: Grid, { x, y }: Coord) => grid.matrix[x][y];
 // takes in two states and returns boolean based on whether they are the same.
 const isState = (desiredState: CellState) => (cellState: CellState) =>
   cellState === desiredState;
-//
+
 // const applyRule = (oldGrid: Grid, rule: RuleFunction): Grid => {
 //   // create new grid based on applying the rule
 //   // iterate through each position in old grid
@@ -114,7 +114,7 @@ export const getNumNeighboursWithState = (
   const isDesiredState = isState(desiredState);
 
   const neighboursWithState = neighbours.filter((n) => isDesiredState(n));
-  console.log(coord, desiredState, neighbours, neighboursWithState);
+  // console.log(coord, desiredState, neighbours, neighboursWithState);
   return neighboursWithState.length;
 };
 
@@ -123,33 +123,53 @@ export const createRule = (params: RuleParameters) => {
     initialCellState,
     finalCellState,
     desiredStateCountBounds,
-    neighbourhood,
     requiredNeighbourState,
   } = params;
-
-  const rule = (grid: Grid, coord: Coord): CellState => {
+  //
+  // const rule = (grid: Grid, coord: Coord): CellState => {
+  //   // don't apply if initial cell not initialCellState
+  //   const currentCellState = getCellStateFromGrid(grid, coord);
+  //
+  //   if (currentCellState !== initialCellState) {
+  //     return currentCellState;
+  //   }
+  //   // count neighbours in neighbourhood with specific state
+  //   const neighboursWithStateCount = getNumNeighboursWithState(
+  //     grid,
+  //     coord,
+  //     neighbourhood,
+  //     requiredNeighbourState
+  //   );
+  //
+  //   // if this count is within desired bounds, return finalCellState
+  //   if (isWithinBounds(neighboursWithStateCount, desiredStateCountBounds)) {
+  //     return finalCellState;
+  //   }
+  //   // if this count is not withing desired bounds, return initialCellState
+  //   return currentCellState;
+  // };
+  const rule = (
+    cellState: CellState,
+    neighbourhood: CellState[]
+  ): CellState => {
     // don't apply if initial cell not initialCellState
-    console.log(requiredNeighbourState);
-    const currentCellState = getCellStateFromGrid(grid, coord);
-
-    if (currentCellState !== initialCellState) {
-      return currentCellState;
+    const isDesiredState = isState(requiredNeighbourState);
+    if (cellState !== initialCellState) {
+      return cellState;
     }
     // count neighbours in neighbourhood with specific state
-    const neighboursWithStateCount = getNumNeighboursWithState(
-      grid,
-      coord,
-      neighbourhood,
-      requiredNeighbourState
-    );
+    const neighboursWithStateCount = neighbourhood.filter(
+      (n: CellState): boolean => isDesiredState(n)
+    ).length;
 
     // if this count is within desired bounds, return finalCellState
     if (isWithinBounds(neighboursWithStateCount, desiredStateCountBounds)) {
       return finalCellState;
     }
     // if this count is not withing desired bounds, return initialCellState
-    return currentCellState;
+    return cellState;
   };
+
   return rule;
 };
 
@@ -221,10 +241,17 @@ const sketch = (sk: any) => {
     coord: Coord
   ): CellState => {
     const initialCellState = getCellStateFromGrid(oldGrid, coord);
-    for (let i = 0; i < ruleSet.length; i++) {
-      if (ruleSet[i](oldGrid, coord) !== initialCellState) {
-        console.log(ruleSet[i](oldGrid, coord), coord, i);
-        return ruleSet[i](oldGrid, coord);
+    const neighbourhood = getCellNeighbours(
+      oldGrid,
+      coord,
+      ruleSet.neighbourhood
+    );
+    for (let i = 0; i < ruleSet.rules.length; i++) {
+      if (
+        ruleSet.rules[i](initialCellState, neighbourhood) !== initialCellState
+      ) {
+        // console.log(ruleSet.rules[i](oldGrid, coord), coord, i);
+        return ruleSet.rules[i](initialCellState, neighbourhood);
       }
     }
     return initialCellState;
@@ -263,7 +290,14 @@ const sketch = (sk: any) => {
     Canvas.style("position", "relative");
     Canvas.style("order", "0");
     Canvas.style("top", "0");
-    gridSize = { x: 10, y: 10 };
+    // gridSize = {
+    //   x: Math.floor(sk.windowWidth) * 0.7,
+    //   y: Math.floor(sk.windowHeight) * 0.7,
+    // };
+    gridSize = {
+      x: 20,
+      y: 20,
+    };
     gameGrid = constructGrid(gridSize.x, gridSize.y);
     mooreNeighbourhood = [
       { x: -1, y: -1 },
@@ -279,25 +313,25 @@ const sketch = (sk: any) => {
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 0, upper: 1 },
-      neighbourhood: mooreNeighbourhood,
       requiredNeighbourState: "alive",
     });
     const deathByCrowding: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 4, upper: 8 },
-      neighbourhood: mooreNeighbourhood,
       requiredNeighbourState: "alive",
     });
     const birth: RuleFunction = createRule({
       initialCellState: "dead",
       finalCellState: "alive",
       desiredStateCountBounds: { lower: 3, upper: 3 },
-      neighbourhood: mooreNeighbourhood,
       requiredNeighbourState: "alive",
     });
 
-    GOL = [deathByLonelyness, deathByCrowding, birth];
+    GOL = {
+      rules: [deathByLonelyness, deathByCrowding, birth],
+      neighbourhood: mooreNeighbourhood,
+    };
 
     // move this later
     // for (let state in GOL) {
@@ -308,18 +342,13 @@ const sketch = (sk: any) => {
 
   // click handling
   let clickState = "alive"; // stores the initial state of a click
-  var mouseHoverCellX = Math.floor(sk.mouseX / 20);
-  var mouseHoverCellY = Math.floor(sk.mouseY / 20);
+  var mouseHoverCellX = Math.floor(sk.mouseX / cellSize);
+  var mouseHoverCellY = Math.floor(sk.mouseY / cellSize);
 
   sk.mousePressed = () => {
-    gameGrid.matrix[Math.floor(sk.mouseX / 20)][Math.floor(sk.mouseY / 20)] =
-      "alive";
-
-    // if (Object.keys(states).length == 2) {
-    //   currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, Object.keys(currentMap.ruleSet.states));
-    // }
-    // clickState = currentMap.grid.checkCell(mouseHoverCellX, mouseHoverCellY);
-    // currentMap.display();
+    gameGrid.matrix[Math.floor(sk.mouseX / cellSize)][
+      Math.floor(sk.mouseY / cellSize)
+    ] = clickState;
   };
 
   function mouseDragged() {
@@ -328,9 +357,8 @@ const sketch = (sk: any) => {
   }
 
   sk.draw = () => {
-    let updatedGrid: Grid;
-    mouseHoverCellX = Math.floor(sk.mouseX / 20);
-    mouseHoverCellY = Math.floor(sk.mouseY / 20);
+    mouseHoverCellX = Math.floor(sk.mouseX / cellSize);
+    mouseHoverCellY = Math.floor(sk.mouseY / cellSize);
     if (sk.frameCount % 10 == 0) {
       displayGrid(gameGrid);
     }

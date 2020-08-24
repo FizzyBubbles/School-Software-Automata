@@ -6,6 +6,8 @@ var gridSize: Vector;
 var gameGrid: Grid;
 var mooreNeighbourhood: Neighbourhood;
 
+var play: boolean = false;
+
 var GOL: RuleSet;
 
 type CellState = string;
@@ -110,6 +112,7 @@ export const createRule = (params: RuleParameters) => {
     requiredNeighbourState,
   } = params;
 
+  // creates anonymous rule function that takes in a cell state and neighbourhood and returns the value of the cell if the rule was applied to just that cell
   const rule = (
     cellState: CellState,
     neighbourhood: CellState[]
@@ -139,7 +142,11 @@ const sketch = (sk: any) => {
   sk.keyPressed = () => {
     // plays and pauses simulation
     if (sk.keyCode === 32) {
-      gameGrid = updateGrid(gameGrid, GOL);
+      if (play) {
+        play = false;
+      } else {
+        play = true;
+      }
     }
 
     // open and close sideMenu
@@ -322,6 +329,9 @@ const sketch = (sk: any) => {
     mouseHoverCellX = Math.floor(sk.mouseX / cellSize);
     mouseHoverCellY = Math.floor(sk.mouseY / cellSize);
     if (sk.frameCount % 10 == 0) {
+      if (play) {
+        gameGrid = updateGrid(gameGrid, GOL);
+      }
       displayGrid(gameGrid);
     }
     //gameGrid = updatedGrid;

@@ -4,12 +4,24 @@ import _ from "lodash";
 // CONSTANTS
 const UI_RATIO = 0.7;
 const CELL_SIZE = 20;
-const FRAME_RATE = 5;
+const FRAME_RATE = 60;
+const UPDATE_FRAME_RATE = 5; // how many frames per udate
+
+const mooreNeighbourhood: Neighbourhood = [
+  { x: -1, y: -1 },
+  { x: -1, y: 0 },
+  { x: -1, y: 1 },
+  { x: 0, y: -1 },
+  { x: 0, y: 1 },
+  { x: 1, y: -1 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+];
 
 // GLOBALS
 var gridSize: Vector;
 var gameGrid: Grid;
-var mooreNeighbourhood: Neighbourhood;
+var gridHasChanged = true;
 
 var play: boolean = false;
 
@@ -94,14 +106,9 @@ const constructGrid = (rows: number, columns: number): Grid => {
   return { matrix: gridMatrix };
 };
 
-const getCellNeighbours = (
-  grid: Grid,
-  coord: Coord,
-  neighbourhood: Neighbourhood
-): CellState[] => {
+const effectiveNeighbourhood = (coord: Coord, neighbourhood: Neighbourhood):Neighbourhood => {
   const { x, y } = coord;
-  // Returns all CellStates around a coordinate
-  const effectiveNeighbourhood = neighbourhood.filter((v: Vector) => {
+  return neighbourhood.filter((v: Vector) => {
     if (
       isWithinBounds(x + v.x, {
         lower: 0,
@@ -116,10 +123,20 @@ const getCellNeighbours = (
     }
     return false;
   });
-  return effectiveNeighbourhood.map(
-    (v: Vector): CellState => {
-      return grid.matrix[x + v.x][y + v.y];
-    }
+}
+
+const getNeighbourCoords = (coord: Coord, neighbourhood:Neighbourhood): Coord[] => {
+  return effectiveNeighbourhood(coord, neighbourhood).map((v: Vector): Coord => ({x: v.x + coord.x, y: v.y + coord.y}))
+}
+
+const getCellNeighbours = (
+  grid: Grid,
+  coord: Coord,
+  neighbourhood: Neighbourhood
+): CellState[] => {
+  // Returns all CellStates around a coordinate
+  return getNeighbourCoords(coord, neighbourhood).map(
+    (c: Coord): CellState => getCellStateFromGrid(grid, c)
   );
 };
 
@@ -262,27 +279,19 @@ const sketch = (sk: any) => {
   };
 
   sk.setup = () => {
-    var Canvas = sk.createCanvas(UI_RATIO * sk.windowWidth, sk.windowHeight);
+    var Canvas = sk.createCanvas(sk.windowWidth, sk.windowHeight);
+    sk.frameRate(FRAME_RATE)
     Canvas.parent("container");
     Canvas.style("position", "relative");
     Canvas.style("order", "0");
     Canvas.style("top", "0");
     Canvas.id("Canvas");
     gridSize = {
-      x: Math.floor((sk.windowWidth * UI_RATIO) / CELL_SIZE),
+      x: Math.floor((sk.windowWidth) / CELL_SIZE),
       y: Math.floor(sk.windowHeight / CELL_SIZE),
     };
     gameGrid = constructGrid(gridSize.x, gridSize.y);
-    mooreNeighbourhood = [
-      { x: -1, y: -1 },
-      { x: -1, y: 0 },
-      { x: -1, y: 1 },
-      { x: 0, y: -1 },
-      { x: 0, y: 1 },
-      { x: 1, y: -1 },
-      { x: 1, y: 0 },
-      { x: 1, y: 1 },
-    ];
+   
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
@@ -328,25 +337,49 @@ const sketch = (sk: any) => {
   // window.addEventListener("wheel", _.throttle(jumpUp, 500, { leading: true }));
   const setGridCellState = (oldGrid: Grid, coord: Coord): void => {
     oldGrid.matrix[coord.x][coord.y] = clickState;
+    gridHasChanged = true;
   };
-  const mouseTileOver = (cellDimensions: number): Coord => ({
-    x: Math.floor(sk.mouseX / cellDimensions),
-    y: Math.floor(sk.mouseY / cellDimensions),
+  const mouseTileOver = (): Coord => ({
+    x: Math.floor(sk.mouseX / CELL_SIZE),
+    y: Math.floor(sk.mouseY / CELL_SIZE),
   });
 
   sk.mouseDragged = () => {
-    setGridCellState(gameGrid, mouseTileOver(CELL_SIZE));
+    setGridCellState(gameGrid, mouseTileOver());
   };
 
+  let oldMousePosition: Coord;
   sk.draw = () => {
-    displayGrid(gameGrid);
+    if (gridHasChanged) {
+     displayGrid(gameGrid);
+     gridHasChanged = false;
+     console.log("redraw");
+    }
+    
+    
+    // clear old mouse position
+    if (oldMousePosition){
+      sk.push(); 
+      const mouseNeighbourHood = [...mooreNeighbourhood, {x:0, y: 0}]
+      getNeighbourCoords(oldMousePosition, mouseNeighbourHood).forEach((coord: Coord) => {
+        displayCell({
+          pos: coord, 
+          state: getCellStateFromGrid(gameGrid, coord)
+        });
+      })
+      sk.pop();
+    }
     sk.push();
     sk.fill(getStateColour(clickState));
+
     sk.circle(sk.mouseX, sk.mouseY, 10);
+
+    oldMousePosition = mouseTileOver()
     sk.pop();
-    if (sk.frameCount % FRAME_RATE == 0) {
+    if (sk.frameCount % UPDATE_FRAME_RATE == 0) {
       if (play) {
         gameGrid = updateGrid(gameGrid, GOL);
+        gridHasChanged = true;
       }
     }
     //gameGrid = updatedGrid;

@@ -157,11 +157,7 @@ const sketch = (sk: any) => {
   sk.keyPressed = () => {
     // plays and pauses simulation
     if (sk.keyCode === 32) {
-      if (play) {
-        play = false;
-      } else {
-        play = true;
-      }
+      togglePlay();
     }
 
     // open and close sideMenu
@@ -365,7 +361,11 @@ const reset = () => {
   gameGrid = constructGrid(gridSize.x, gridSize.y);
 };
 
+const togglePlay = (): void => {
+  play = !play;
+};
+
 // event listeners
 $("#resetButton").on("click", reset);
-
+$("#playPauseButton").on("click", togglePlay);
 new p5(sketch);

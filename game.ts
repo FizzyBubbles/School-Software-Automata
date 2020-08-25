@@ -334,11 +334,10 @@ const sketch = (sk: any) => {
     x: Math.floor(sk.mouseX / cellDimensions),
     y: Math.floor(sk.mouseY / cellDimensions),
   });
-  sk.mousePressed = () => {
+
+  sk.mouseDragged = () => {
     setGridCellState(gameGrid, mouseTileOver(cellSize));
   };
-
-  sk.mouseDragged = () => {};
 
   sk.draw = () => {
     displayGrid(gameGrid);

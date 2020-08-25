@@ -1,5 +1,6 @@
 import $ from "jquery";
 import p5 from "p5";
+import _ from "lodash";
 
 // GLOBALS
 var gridSize: Vector;
@@ -158,6 +159,12 @@ const sketch = (sk: any) => {
     } else if (sk.keyCode === 13) {
       $("#sideMenu").css("width", "0%");
     }
+    if (
+      (sk.keyCode >= 48 && sk.keyCode <= 57) ||
+      (sk.keyCode >= 96 && sk.keyCode <= 104)
+    ) {
+      setClickState(sk.key % 2, ["dead", "alive"]);
+    }
   };
   const constructGrid = (rows: number, columns: number): Grid => {
     // creates a new 2d array using for loops
@@ -259,6 +266,7 @@ const sketch = (sk: any) => {
     Canvas.style("position", "relative");
     Canvas.style("order", "0");
     Canvas.style("top", "0");
+    Canvas.id("Canvas");
     // gridSize = {
     //   x: Math.floor(sk.windowWidth) * 0.7,
     //   y: Math.floor(sk.windowHeight) * 0.7,
@@ -311,8 +319,12 @@ const sketch = (sk: any) => {
 
   // click handling
   let clickState = "alive"; // stores the initial state of a click
-  var mouseHoverCellX = Math.floor(sk.mouseX / cellSize);
-  var mouseHoverCellY = Math.floor(sk.mouseY / cellSize);
+
+  const setClickState = (position: number, cellStates: CellState[]): void => {
+    clickState = cellStates[position];
+  };
+
+  // window.addEventListener("wheel", _.throttle(jumpUp, 500, { leading: true }));
 
   sk.mousePressed = () => {
     gameGrid.matrix[Math.floor(sk.mouseX / cellSize)][
@@ -320,20 +332,20 @@ const sketch = (sk: any) => {
     ] = clickState;
   };
 
-  function mouseDragged() {
-    // currentMap.grid.addCell(mouseHoverCellX, mouseHoverCellY, clickState);
-    // currentMap.display();
-  }
+  sk.mouseDragged = () => {};
 
   sk.draw = () => {
-    mouseHoverCellX = Math.floor(sk.mouseX / cellSize);
-    mouseHoverCellY = Math.floor(sk.mouseY / cellSize);
+    displayGrid(gameGrid);
+    sk.push();
+    sk.fill(getStateColour(clickState));
+    sk.circle(sk.mouseX, sk.mouseY, 10);
+    sk.pop();
     if (sk.frameCount % 10 == 0) {
       if (play) {
         gameGrid = updateGrid(gameGrid, GOL);
       }
-      displayGrid(gameGrid);
     }
+
     //gameGrid = updatedGrid;
   };
 };

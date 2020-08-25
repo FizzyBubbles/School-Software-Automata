@@ -327,11 +327,15 @@ const sketch = (sk: any) => {
   };
 
   // window.addEventListener("wheel", _.throttle(jumpUp, 500, { leading: true }));
-
+  const setGridCellState = (oldGrid: Grid, coord: Coord): void => {
+    oldGrid.matrix[coord.x][coord.y] = clickState;
+  };
+  const mouseTileOver = (cellDimensions: number): Coord => ({
+    x: Math.floor(sk.mouseX / cellDimensions),
+    y: Math.floor(sk.mouseY / cellDimensions),
+  });
   sk.mousePressed = () => {
-    gameGrid.matrix[Math.floor(sk.mouseX / cellSize)][
-      Math.floor(sk.mouseY / cellSize)
-    ] = clickState;
+    setGridCellState(gameGrid, mouseTileOver(cellSize));
   };
 
   sk.mouseDragged = () => {};

@@ -1,6 +1,10 @@
 import $ from "jquery";
 import p5 from "p5";
 import _ from "lodash";
+// CONSTANTS
+const UI_RATIO = 0.7;
+const CELL_SIZE = 20;
+const FRAME_RATE = 5;
 
 // GLOBALS
 var gridSize: Vector;
@@ -184,14 +188,13 @@ const sketch = (sk: any) => {
   };
 
   const getStateColour = (state: CellState) => colourLibrary[state];
-  const cellSize = 20;
-
+  
   const displayCell = (cell: Cell) => {
     // figure out what colour the state should be
     const cellColour = getStateColour(cell.state);
     sk.fill(cellColour);
     // draw a square at the position of the cell
-    sk.square(cell.pos.x * cellSize, cell.pos.y * cellSize, cellSize);
+    sk.square(cell.pos.x * CELL_SIZE, cell.pos.y * CELL_SIZE, CELL_SIZE);
   };
 
   const displayGrid = (grid: Grid) => {
@@ -259,19 +262,15 @@ const sketch = (sk: any) => {
   };
 
   sk.setup = () => {
-    var Canvas = sk.createCanvas(0.7 * sk.windowWidth, sk.windowHeight);
+    var Canvas = sk.createCanvas(UI_RATIO * sk.windowWidth, sk.windowHeight);
     Canvas.parent("container");
     Canvas.style("position", "relative");
     Canvas.style("order", "0");
     Canvas.style("top", "0");
     Canvas.id("Canvas");
-    // gridSize = {
-    //   x: Math.floor(sk.windowWidth) * 0.7,
-    //   y: Math.floor(sk.windowHeight) * 0.7,
-    // };
     gridSize = {
-      x: 20,
-      y: 20,
+      x: Math.floor((sk.windowWidth * UI_RATIO) / CELL_SIZE),
+      y: Math.floor(sk.windowHeight / CELL_SIZE),
     };
     gameGrid = constructGrid(gridSize.x, gridSize.y);
     mooreNeighbourhood = [
@@ -336,7 +335,7 @@ const sketch = (sk: any) => {
   });
 
   sk.mouseDragged = () => {
-    setGridCellState(gameGrid, mouseTileOver(cellSize));
+    setGridCellState(gameGrid, mouseTileOver(CELL_SIZE));
   };
 
   sk.draw = () => {
@@ -345,7 +344,7 @@ const sketch = (sk: any) => {
     sk.fill(getStateColour(clickState));
     sk.circle(sk.mouseX, sk.mouseY, 10);
     sk.pop();
-    if (sk.frameCount % 10 == 0) {
+    if (sk.frameCount % FRAME_RATE == 0) {
       if (play) {
         gameGrid = updateGrid(gameGrid, GOL);
       }

@@ -37,6 +37,7 @@ export type RuleFunction = (
 export type RuleSet = {
   rules: RuleFunction[];
   neighbourhood: Neighbourhood;
+  states: CellState[];
 };
 
 type Bound = {
@@ -75,6 +76,19 @@ const isState = (desiredState: CellState) => (cellState: CellState) =>
 //
 //   return { matrix: newGrid };
 // };
+
+const constructGrid = (rows: number, columns: number): Grid => {
+  // creates a new 2d array using for loops
+  let gridMatrix = [];
+  for (let x = 0; x < rows; x++) {
+    let column = [];
+    for (let y = 0; y < columns; y++) {
+      column.push("dead"); // adds the default state into the columns
+    }
+    gridMatrix.push(column);
+  }
+  return { matrix: gridMatrix };
+};
 
 const getCellNeighbours = (
   grid: Grid,
@@ -165,18 +179,6 @@ const sketch = (sk: any) => {
     ) {
       setClickState(sk.key % 2, ["dead", "alive"]);
     }
-  };
-  const constructGrid = (rows: number, columns: number): Grid => {
-    // creates a new 2d array using for loops
-    let gridMatrix = [];
-    for (let x = 0; x < rows; x++) {
-      let column = [];
-      for (let y = 0; y < columns; y++) {
-        column.push("dead"); // adds the default state into the columns
-      }
-      gridMatrix.push(column);
-    }
-    return { matrix: gridMatrix };
   };
 
   // stores the colour mapping from state to colour.
@@ -308,13 +310,17 @@ const sketch = (sk: any) => {
     GOL = {
       rules: [deathByLonelyness, deathByCrowding, birth],
       neighbourhood: mooreNeighbourhood,
+      states: ["dead", "alive"],
     };
 
-    // move this later
-    // for (let state in GOL) {
-    //   $('#statisticBar').append('<div class="square" id="' + state + '"></div>');
-    //   $('#' + state).css('background-color', currentMap.ruleSet.states[state]);
-    // }
+    // TODO: move this later
+    GOL.states.forEach((state) => {
+      $("#statisticBar").append(
+        '<div class="square" id="' + state + '">' + state + '</div>"'
+      );
+      $("#" + state).css("background-color", getStateColour(state));
+      $("#" + state).css("color", getStateColour(state));
+    });
   };
 
   // click handling
@@ -345,9 +351,21 @@ const sketch = (sk: any) => {
         gameGrid = updateGrid(gameGrid, GOL);
       }
     }
-
     //gameGrid = updatedGrid;
   };
+
+  $("#iterateButton").on("click", () => {
+    gameGrid = iterateAndDisplayGrid(gameGrid, GOL);
+  });
 };
+
+// reset function
+const reset = () => {
+  // sets the game grid to a dead cell state grid (empty)
+  gameGrid = constructGrid(gridSize.x, gridSize.y);
+};
+
+// event listeners
+$("#resetButton").on("click", reset);
 
 new p5(sketch);

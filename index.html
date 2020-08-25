@@ -21,7 +21,7 @@
       }
       .square {
         height: 25px;
-        width: 25px;
+        width: 100%;
       }
       #headerBar {
         color: white;
@@ -40,6 +40,9 @@
           <h1>Game of Life</h1>
         </div>
         <div id="statisticBar"></div>
+        <input type="button" value="reset" id="resetButton" />
+        <input type="button" value="play/pause" onclick="playPause" />
+        <input type="button" value="iterate" id="iterateButton" />
       </div>
     </div>
     <!-- <script src="classes.js"></script> -->

@@ -92,6 +92,7 @@ const isState = (desiredState: CellState) => (cellState: CellState) =>
 //
 //   return { matrix: newGrid };
 // };
+const randomInt = (max:number):number => Math.floor(Math.random() * Math.floor(max));
 
 const constructGrid = (rows: number, columns: number): Grid => {
   // creates a new 2d array using for loops
@@ -105,6 +106,19 @@ const constructGrid = (rows: number, columns: number): Grid => {
   }
   return { matrix: gridMatrix };
 };
+const snapNumber = (float:number, length: number):number => Math.floor(float*length);
+
+const randomGrid = (states:CellState[]):Grid => {
+  let gridMatrix = [];
+  for (let x = 0; x < gameGrid.matrix.length; x++) {
+    let column = [];
+    for (let y = 0; y < gameGrid.matrix[x].length; y++) {
+      column.push(states[randomInt(states.length)]); // adds random state to columns
+    }
+    gridMatrix.push(column);
+  }
+  return { matrix: gridMatrix };
+}
 
 const effectiveNeighbourhood = (coord: Coord, neighbourhood: Neighbourhood):Neighbourhood => {
   const { x, y } = coord;
@@ -174,11 +188,39 @@ export const createRule = (params: RuleParameters) => {
   return rule;
 };
 
+var py = 0;
+var px = 0;
 const sketch = (sk: any) => {
+  const perlinGrid = (states:CellState[]): Grid => {
+    let gridMatrix = [];
+
+    for (let x = 0; x < gameGrid.matrix.length; x++) {
+      let column = [];
+      px += 0.2;
+      for (let y = 0; y < gameGrid.matrix[x].length; y++) {
+        py += 0.4;
+        column.push(states[snapNumber(sk.noise(px, py), states.length)]); // adds the default state into the columns
+      }
+      gridMatrix.push(column);
+    }
+    return { matrix: gridMatrix };
+  }
+
+  const setGameGrid = (newGrid:Grid):void => {
+    gridHasChanged = true;
+    gameGrid = newGrid;
+  }
+
   sk.keyPressed = () => {
     // plays and pauses simulation
     if (sk.keyCode === 32) {
       togglePlay();
+    }
+    if (sk.key === 'p') {
+      setGameGrid(perlinGrid(['dead','alive']));
+    }
+    if (sk.key === 'r') {
+      setGameGrid(randomGrid(['dead', 'alive']));
     }
 
     // open and close sideMenu
@@ -290,7 +332,7 @@ const sketch = (sk: any) => {
       x: Math.floor((sk.windowWidth) / CELL_SIZE),
       y: Math.floor(sk.windowHeight / CELL_SIZE),
     };
-    gameGrid = constructGrid(gridSize.x, gridSize.y);
+    setGameGrid(constructGrid(gridSize.x, gridSize.y));
    
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
@@ -344,6 +386,10 @@ const sketch = (sk: any) => {
     y: Math.floor(sk.mouseY / CELL_SIZE),
   });
 
+  sk.mousePressed = () => {
+    setGridCellState(gameGrid, mouseTileOver());
+  }
+
   sk.mouseDragged = () => {
     setGridCellState(gameGrid, mouseTileOver());
   };
@@ -378,29 +424,31 @@ const sketch = (sk: any) => {
     sk.pop();
     if (sk.frameCount % UPDATE_FRAME_RATE == 0) {
       if (play) {
-        gameGrid = updateGrid(gameGrid, GOL);
-        gridHasChanged = true;
+        setGameGrid(updateGrid(gameGrid, GOL));
       }
     }
     //gameGrid = updatedGrid;
   };
 
-  $("#iterateButton").on("click", () => {
-    gameGrid = iterateAndDisplayGrid(gameGrid, GOL);
-  });
-};
-
-// reset function
+  // reset function
 const reset = () => {
   // sets the game grid to a dead cell state grid (empty)
-  gameGrid = constructGrid(gridSize.x, gridSize.y);
+  setGameGrid(constructGrid(gridSize.x, gridSize.y));
 };
+
+  $("#iterateButton").on("click", () => {
+    setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
+  });
+  $("#resetButton").on("click", reset);
+};
+
+
 
 const togglePlay = (): void => {
   play = !play;
 };
 
 // event listeners
-$("#resetButton").on("click", reset);
 $("#playPauseButton").on("click", togglePlay);
+
 new p5(sketch);

@@ -259,12 +259,12 @@ const sketch = (sk: any) => {
     alive: "white",
   };
 
-  const getStateColour = (state: CellState) => colourLibrary[state];
+  const getStateColor = (state: CellState) => colourLibrary[state];
 
   const displayCell = (cell: Cell) => {
     // figure out what colour the state should be
-    const cellColour = getStateColour(cell.state);
-    sk.fill(cellColour);
+    const cellColor = getStateColor(cell.state);
+    sk.fill(cellColor);
     // draw a square at the position of the cell
     sk.square(cell.pos.x * CELL_SIZE, cell.pos.y * CELL_SIZE, CELL_SIZE);
   };
@@ -379,9 +379,9 @@ const sketch = (sk: any) => {
       $("#statisticBar").append(
         '<div class="square" id=' + state + '>' + state + '</div>'
       );
-      $("#" + state).css("background-color", sk.color(getStateColour(state)));
-      //console.log(sk.color(getStateColour(state)))
-      const inverseColor: Color = invertColor(sk.color(getStateColour(state)));
+      $("#" + state).css("background-color", sk.color(getStateColor(state)));
+      //console.log(sk.color(getStateColor(state)))
+      const inverseColor: Color = invertColor(sk.color(getStateColor(state)));
       $("#" + state).css("color", inverseColor);
     });
   };
@@ -434,7 +434,7 @@ const sketch = (sk: any) => {
       sk.pop();
     }
     sk.push();
-    sk.fill(getStateColour(clickState));
+    sk.fill(getStateColor(clickState));
 
     sk.circle(sk.mouseX, sk.mouseY, 10);
 

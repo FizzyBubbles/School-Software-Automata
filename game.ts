@@ -333,10 +333,7 @@ const sketch = (sk: any) => {
     return newGrid;
   };
 
-  const invertColor = (c: Color): Color => {
-    let outputColor = c;
-    // outputColor._getRed()
-  };
+  const invertColor = (c: Color): Color => sk.color(255-sk.red(c), 255-sk.green(c), 255-sk.blue(c));
 
   sk.setup = () => {
     var Canvas = sk.createCanvas(sk.windowWidth, sk.windowHeight);
@@ -378,13 +375,13 @@ const sketch = (sk: any) => {
     };
 
     // TODO: move this later
-    GOL.states.forEach((state) => {
+    GOL.states.forEach((state:CellState) => {
       $("#statisticBar").append(
-        '<div class="square" id="' + state + '">' + state + '</div>"'
+        '<div class="square" id=' + state + '>' + state + '</div>'
       );
       $("#" + state).css("background-color", sk.color(getStateColour(state)));
       //console.log(sk.color(getStateColour(state)))
-      // $("#" + state).css("color", getStateColour(state));
+      $("#" + state).css("color", invertColor(sk.color(getStateColour(state))));
     });
   };
 

@@ -1,8 +1,8 @@
 import $ from "jquery";
-import p5 from "p5";
+import p5, { Color } from "p5";
 import _ from "lodash";
 // CONSTANTS
-const UI_RATIO = 0.7;
+const UI_RATIO = 0.3;
 const CELL_SIZE = 20;
 const FRAME_RATE = 60;
 const UPDATE_FRAME_RATE = 5; // how many frames per udate
@@ -92,7 +92,8 @@ const isState = (desiredState: CellState) => (cellState: CellState) =>
 //
 //   return { matrix: newGrid };
 // };
-const randomInt = (max:number):number => Math.floor(Math.random() * Math.floor(max));
+const randomInt = (max: number): number =>
+  Math.floor(Math.random() * Math.floor(max));
 
 const constructGrid = (rows: number, columns: number): Grid => {
   // creates a new 2d array using for loops
@@ -106,9 +107,10 @@ const constructGrid = (rows: number, columns: number): Grid => {
   }
   return { matrix: gridMatrix };
 };
-const snapNumber = (float:number, length: number):number => Math.floor(float*length);
+const snapNumber = (float: number, length: number): number =>
+  Math.floor(float * length);
 
-const randomGrid = (states:CellState[]):Grid => {
+const randomGrid = (states: CellState[]): Grid => {
   let gridMatrix = [];
   for (let x = 0; x < gameGrid.matrix.length; x++) {
     let column = [];
@@ -118,9 +120,12 @@ const randomGrid = (states:CellState[]):Grid => {
     gridMatrix.push(column);
   }
   return { matrix: gridMatrix };
-}
+};
 
-const effectiveNeighbourhood = (coord: Coord, neighbourhood: Neighbourhood):Neighbourhood => {
+const effectiveNeighbourhood = (
+  coord: Coord,
+  neighbourhood: Neighbourhood
+): Neighbourhood => {
   const { x, y } = coord;
   return neighbourhood.filter((v: Vector) => {
     if (
@@ -137,11 +142,16 @@ const effectiveNeighbourhood = (coord: Coord, neighbourhood: Neighbourhood):Neig
     }
     return false;
   });
-}
+};
 
-const getNeighbourCoords = (coord: Coord, neighbourhood:Neighbourhood): Coord[] => {
-  return effectiveNeighbourhood(coord, neighbourhood).map((v: Vector): Coord => ({x: v.x + coord.x, y: v.y + coord.y}))
-}
+const getNeighbourCoords = (
+  coord: Coord,
+  neighbourhood: Neighbourhood
+): Coord[] => {
+  return effectiveNeighbourhood(coord, neighbourhood).map(
+    (v: Vector): Coord => ({ x: v.x + coord.x, y: v.y + coord.y })
+  );
+};
 
 const getCellNeighbours = (
   grid: Grid,
@@ -188,10 +198,11 @@ export const createRule = (params: RuleParameters) => {
   return rule;
 };
 
-var py = 0;
-var px = 0;
+// perlin noise map function
+var py = 0; // perlin noise y position
+var px = 0; // perlin noise x position
 const sketch = (sk: any) => {
-  const perlinGrid = (states:CellState[]): Grid => {
+  const perlinGrid = (states: CellState[]): Grid => {
     let gridMatrix = [];
 
     for (let x = 0; x < gameGrid.matrix.length; x++) {
@@ -199,38 +210,40 @@ const sketch = (sk: any) => {
       px += 0.2;
       for (let y = 0; y < gameGrid.matrix[x].length; y++) {
         py += 0.4;
-        column.push(states[snapNumber(sk.noise(px, py), states.length)]); // adds the default state into the columns
+        column.push(states[snapNumber(sk.noise(px, py), states.length)]); // adds the assigned snapped perlin noise function value to the array
       }
       gridMatrix.push(column);
     }
     return { matrix: gridMatrix };
-  }
+  };
 
-  const setGameGrid = (newGrid:Grid):void => {
+  const setGameGrid = (newGrid: Grid): void => {
+    // hides my mutible crimes :)
     gridHasChanged = true;
     gameGrid = newGrid;
-  }
+  };
 
   sk.keyPressed = () => {
     // plays and pauses simulation
     if (sk.keyCode === 32) {
       togglePlay();
     }
-    if (sk.key === 'p') {
-      setGameGrid(perlinGrid(['dead','alive']));
+    // sets grid to perlin noise grid
+    if (sk.key === "p") {
+      setGameGrid(perlinGrid(["dead", "alive"]));
     }
-    if (sk.key === 'r') {
-      setGameGrid(randomGrid(['dead', 'alive']));
+    // sets grid to random grid
+    if (sk.key === "r") {
+      setGameGrid(randomGrid(["dead", "alive"]));
     }
 
     // open and close sideMenu
-    if (
-      sk.keyCode === 13 &&
-      document.getElementById("sideMenu")?.style.width !== "30%"
-    ) {
-      $("#sideMenu").css("width", "30%");
-    } else if (sk.keyCode === 13) {
-      $("#sideMenu").css("width", "0%");
+    if (sk.keyCode === 13) {
+      if (document.getElementById("sideMenu")?.style.width !== "30%") {
+        $("#sideMenu").css("width", "30%"); // sets side menu width to 30%
+      } else {
+        $("#sideMenu").css("width", "0%"); // sets side menu width to 0%
+      }
     }
     if (
       (sk.keyCode >= 48 && sk.keyCode <= 57) ||
@@ -247,7 +260,7 @@ const sketch = (sk: any) => {
   };
 
   const getStateColour = (state: CellState) => colourLibrary[state];
-  
+
   const displayCell = (cell: Cell) => {
     // figure out what colour the state should be
     const cellColour = getStateColour(cell.state);
@@ -320,20 +333,25 @@ const sketch = (sk: any) => {
     return newGrid;
   };
 
+  const invertColor = (c: Color): Color => {
+    let outputColor = c;
+    // outputColor._getRed()
+  };
+
   sk.setup = () => {
     var Canvas = sk.createCanvas(sk.windowWidth, sk.windowHeight);
-    sk.frameRate(FRAME_RATE)
+    sk.frameRate(FRAME_RATE);
     Canvas.parent("container");
     Canvas.style("position", "relative");
     Canvas.style("order", "0");
     Canvas.style("top", "0");
     Canvas.id("Canvas");
     gridSize = {
-      x: Math.floor((sk.windowWidth) / CELL_SIZE),
+      x: Math.floor(sk.windowWidth / CELL_SIZE),
       y: Math.floor(sk.windowHeight / CELL_SIZE),
     };
     setGameGrid(constructGrid(gridSize.x, gridSize.y));
-   
+
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
@@ -364,8 +382,9 @@ const sketch = (sk: any) => {
       $("#statisticBar").append(
         '<div class="square" id="' + state + '">' + state + '</div>"'
       );
-      $("#" + state).css("background-color", getStateColour(state));
-      $("#" + state).css("color", getStateColour(state));
+      $("#" + state).css("background-color", sk.color(getStateColour(state)));
+      //console.log(sk.color(getStateColour(state)))
+      // $("#" + state).css("color", getStateColour(state));
     });
   };
 
@@ -388,7 +407,7 @@ const sketch = (sk: any) => {
 
   sk.mousePressed = () => {
     setGridCellState(gameGrid, mouseTileOver());
-  }
+  };
 
   sk.mouseDragged = () => {
     setGridCellState(gameGrid, mouseTileOver());
@@ -397,22 +416,23 @@ const sketch = (sk: any) => {
   let oldMousePosition: Coord;
   sk.draw = () => {
     if (gridHasChanged) {
-     displayGrid(gameGrid);
-     gridHasChanged = false;
-     console.log("redraw");
+      displayGrid(gameGrid);
+      gridHasChanged = false;
+      console.log("redraw");
     }
-    
-    
+
     // clear old mouse position
-    if (oldMousePosition){
-      sk.push(); 
-      const mouseNeighbourHood = [...mooreNeighbourhood, {x:0, y: 0}]
-      getNeighbourCoords(oldMousePosition, mouseNeighbourHood).forEach((coord: Coord) => {
-        displayCell({
-          pos: coord, 
-          state: getCellStateFromGrid(gameGrid, coord)
-        });
-      })
+    if (oldMousePosition) {
+      sk.push();
+      const mouseNeighbourHood = [...mooreNeighbourhood, { x: 0, y: 0 }];
+      getNeighbourCoords(oldMousePosition, mouseNeighbourHood).forEach(
+        (coord: Coord) => {
+          displayCell({
+            pos: coord,
+            state: getCellStateFromGrid(gameGrid, coord),
+          });
+        }
+      );
       sk.pop();
     }
     sk.push();
@@ -420,7 +440,7 @@ const sketch = (sk: any) => {
 
     sk.circle(sk.mouseX, sk.mouseY, 10);
 
-    oldMousePosition = mouseTileOver()
+    oldMousePosition = mouseTileOver();
     sk.pop();
     if (sk.frameCount % UPDATE_FRAME_RATE == 0) {
       if (play) {
@@ -431,18 +451,16 @@ const sketch = (sk: any) => {
   };
 
   // reset function
-const reset = () => {
-  // sets the game grid to a dead cell state grid (empty)
-  setGameGrid(constructGrid(gridSize.x, gridSize.y));
-};
+  const reset = () => {
+    // sets the game grid to a dead cell state grid (empty)
+    setGameGrid(constructGrid(gridSize.x, gridSize.y));
+  };
 
   $("#iterateButton").on("click", () => {
     setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
   });
   $("#resetButton").on("click", reset);
 };
-
-
 
 const togglePlay = (): void => {
   play = !play;

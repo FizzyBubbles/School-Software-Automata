@@ -77,23 +77,6 @@ const getCellStateFromGrid = (grid: Grid, { x, y }: Coord) => grid.matrix[x][y];
 const isState = (desiredState: CellState) => (cellState: CellState) =>
   cellState === desiredState;
 
-// const applyRule = (oldGrid: Grid, rule: RuleFunction): Grid => {
-//   // create new grid based on applying the rule
-//   // iterate through each position in old grid
-//   // allPositions youll need to provide
-//   let newGrid: CellState[][] = [];
-//   for (let x = 0; x < oldGrid.matrix.length; x++) {
-//     let column: CellState[] = [];
-//     for (let y = 0; y < oldGrid.matrix[x].length; y++) {
-//       const newCell = rule(oldGrid, { x: x, y: y });
-//       column.push(newCell);
-//     }
-//     newGrid.push(column);
-//   }
-//
-//   return { matrix: newGrid };
-// };
-
 const randomInt = (max: number): number =>
   Math.floor(Math.random() * Math.floor(max));
 
@@ -341,19 +324,20 @@ const sketch = (sk: any) => {
     return newGrid;
   };
 
-  const invertColor = (c: Color): Color => sk.color(255-sk.red(c), 255-sk.green(c), 255-sk.blue(c));
+  const invertColor = (c: Color): Color =>
+    sk.color(255 - sk.red(c), 255 - sk.green(c), 255 - sk.blue(c));
 
   const displayStatesOnSideMenu = (ruleSet: RuleSet): void => {
-    ruleSet.states.forEach((state:CellState) => {
+    ruleSet.states.forEach((state: CellState) => {
       $("#statisticBar").append(
-        '<div class="square" id=' + state + '>' + state + '</div>'
+        '<div class="square" id=' + state + ">" + state + "</div>"
       );
       $("#" + state).css("background-color", sk.color(getStateColor(state)));
       //console.log(sk.color(getStateColor(state)))
       const inverseColor: Color = invertColor(sk.color(getStateColor(state)));
       $("#" + state).css("color", inverseColor);
     });
-  }
+  };
   sk.setup = () => {
     var Canvas = sk.createCanvas(sk.windowWidth, sk.windowHeight);
     sk.frameRate(FRAME_RATE);
@@ -368,7 +352,6 @@ const sketch = (sk: any) => {
     };
     setGameGrid(constructGrid(gridSize.x, gridSize.y)); // creates grid
 
-    
     // Game of life rule set
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
@@ -396,7 +379,6 @@ const sketch = (sk: any) => {
     };
 
     displayStatesOnSideMenu(GOL);
-
   };
 
   // click handling
@@ -425,9 +407,12 @@ const sketch = (sk: any) => {
 
   sk.mouseDragged = () => {
     // turns off placement when dragging on menu
-    if (getCellStateFromGrid(gameGrid, mouseTileOver()) !== clickState && $("#sideMenu:hover").length === 0) {
+    if (
+      getCellStateFromGrid(gameGrid, mouseTileOver()) !== clickState &&
+      $("#sideMenu:hover").length === 0
+    ) {
       setGridCellState(gameGrid, mouseTileOver());
-    };
+    }
   };
 
   let oldMousePosition: Coord;
@@ -475,15 +460,14 @@ const sketch = (sk: any) => {
 
   const rand = () => {
     //sets the game grid to a random grid
-    setGameGrid(randomGrid(['dead', 'alive']));
-  }
+    setGameGrid(randomGrid(["dead", "alive"]));
+  };
 
   $("#iterateButton").on("click", () => {
     setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
   });
   $("#resetButton").on("click", reset);
   $("#randomButton").on("click", rand);
-
 };
 
 const togglePlay = (): void => {
@@ -492,7 +476,7 @@ const togglePlay = (): void => {
 
 const setSpeed = () => {
   updateFrameRate = FRAME_RATE - document.getElementById("speedSlider").value;
-}
+};
 // event listeners
 $("#playPauseButton").on("click", togglePlay);
 $("#speedSlider").on("change", setSpeed);

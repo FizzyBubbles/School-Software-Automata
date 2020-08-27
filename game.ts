@@ -6,7 +6,6 @@ import _ from "lodash";
 const UI_RATIO = 0.3;
 const CELL_SIZE = 20;
 const FRAME_RATE = 60;
-var updateFrameRate = 5; // how many frames per udate
 
 const mooreNeighbourhood: Neighbourhood = [
   { x: -1, y: -1 },
@@ -23,6 +22,7 @@ const mooreNeighbourhood: Neighbourhood = [
 var gridSize: Vector;
 var gameGrid: Grid;
 var gridHasChanged = true;
+var updateFrameRate = 5; // how many frames per udate
 
 var play: boolean = false;
 
@@ -93,6 +93,7 @@ const isState = (desiredState: CellState) => (cellState: CellState) =>
 //
 //   return { matrix: newGrid };
 // };
+
 const randomInt = (max: number): number =>
   Math.floor(Math.random() * Math.floor(max));
 
@@ -230,12 +231,18 @@ const sketch = (sk: any) => {
       togglePlay();
     }
     // sets grid to perlin noise grid
-    if (sk.key === "p") {
+    if (sk.keyCode === 80) {
       setGameGrid(perlinGrid(["dead", "alive"]));
     }
     // sets grid to random grid
-    if (sk.key === "r") {
+    if (sk.keyCode === 82) {
       setGameGrid(randomGrid(["dead", "alive"]));
+    }
+    if (sk.keyCode === 73) {
+      setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
+    }
+    if (sk.keyCode === 67) {
+      reset();
     }
 
     // open and close sideMenu
@@ -336,6 +343,17 @@ const sketch = (sk: any) => {
 
   const invertColor = (c: Color): Color => sk.color(255-sk.red(c), 255-sk.green(c), 255-sk.blue(c));
 
+  const displayStatesOnSideMenu = (ruleSet: RuleSet): void => {
+    ruleSet.states.forEach((state:CellState) => {
+      $("#statisticBar").append(
+        '<div class="square" id=' + state + '>' + state + '</div>'
+      );
+      $("#" + state).css("background-color", sk.color(getStateColor(state)));
+      //console.log(sk.color(getStateColor(state)))
+      const inverseColor: Color = invertColor(sk.color(getStateColor(state)));
+      $("#" + state).css("color", inverseColor);
+    });
+  }
   sk.setup = () => {
     var Canvas = sk.createCanvas(sk.windowWidth, sk.windowHeight);
     sk.frameRate(FRAME_RATE);
@@ -345,11 +363,13 @@ const sketch = (sk: any) => {
     Canvas.style("top", "0");
     Canvas.id("Canvas");
     gridSize = {
-      x: Math.floor(sk.windowWidth / CELL_SIZE),
-      y: Math.floor(sk.windowHeight / CELL_SIZE),
+      x: Math.floor(sk.windowWidth / CELL_SIZE), // gets the amount of cells you can fit in the x axis
+      y: Math.floor(sk.windowHeight / CELL_SIZE), // gets the amount of cells you can fit in the y axis
     };
-    setGameGrid(constructGrid(gridSize.x, gridSize.y));
+    setGameGrid(constructGrid(gridSize.x, gridSize.y)); // creates grid
 
+    
+    // Game of life rule set
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
@@ -375,16 +395,8 @@ const sketch = (sk: any) => {
       states: ["dead", "alive"],
     };
 
-    // TODO: move this later
-    GOL.states.forEach((state:CellState) => {
-      $("#statisticBar").append(
-        '<div class="square" id=' + state + '>' + state + '</div>'
-      );
-      $("#" + state).css("background-color", sk.color(getStateColor(state)));
-      //console.log(sk.color(getStateColor(state)))
-      const inverseColor: Color = invertColor(sk.color(getStateColor(state)));
-      $("#" + state).css("color", inverseColor);
-    });
+    displayStatesOnSideMenu(GOL);
+
   };
 
   // click handling

@@ -381,7 +381,8 @@ const sketch = (sk: any) => {
       );
       $("#" + state).css("background-color", sk.color(getStateColour(state)));
       //console.log(sk.color(getStateColour(state)))
-      $("#" + state).css("color", invertColor(sk.color(getStateColour(state))));
+      const inverseColor: Color = invertColor(sk.color(getStateColour(state)));
+      $("#" + state).css("color", inverseColor);
     });
   };
 

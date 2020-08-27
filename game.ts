@@ -405,12 +405,15 @@ const sketch = (sk: any) => {
   });
 
   sk.mousePressed = () => {
-    setGridCellState(gameGrid, mouseTileOver());
+    // turns off placement when clicking on menu
+    if ($("#sideMenu:hover").length === 0) {
+      setGridCellState(gameGrid, mouseTileOver());
+    }
   };
 
   sk.mouseDragged = () => {
-    console.log($("#statisticBar: hover"))
-    if (getCellStateFromGrid(gameGrid, mouseTileOver()) !== clickState && $("#statisticBar: hover").length !== 0) {
+    // turns off placement when dragging on menu
+    if (getCellStateFromGrid(gameGrid, mouseTileOver()) !== clickState && $("#sideMenu:hover").length === 0) {
       setGridCellState(gameGrid, mouseTileOver());
     };
   };

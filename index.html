@@ -4,6 +4,16 @@
       body {
         margin: 0;
       }
+
+      h1 {
+        color: black;
+      }
+
+      .keyBindings {
+        left: 10%;
+        text-align: left;
+        color: white;
+      }
       .container {
         display: flex;
         flex-direction: row;
@@ -13,7 +23,7 @@
       .sideMenu {
         float: right;
         height: 100%;
-        width: 0;
+        width: 30%;
         background-color: grey;
         z-index: 1;
         position: fixed;
@@ -46,6 +56,26 @@
         <input type="button" value="reset" id="resetButton" />
         <input type="button" value="play/pause" id="playPauseButton" />
         <input type="button" value="iterate" id="iterateButton" />
+        <input type="button" value="fill grid randomly" id="randomButton" />
+        <p>speed slider:</p>
+        <input type="range" min="0" max="60" id="speedSlider">
+        <br>
+        <h1>key bindings:</h1>     
+        <div class="keyBindings">
+          NUMBERS 0-9: sets the input Cell States
+          <br>
+          R: fill grid randomly
+          <br>
+          P: fill grid according to perlin noise
+          <br>
+          I: iterate
+          <br>
+          C: clear
+          <br>
+          SPACEBAR: play/pause
+          <br>
+          ENTER: open/close side menu
+        </div>
       </div>
     </div>
     <!-- <script src="classes.js"></script> -->

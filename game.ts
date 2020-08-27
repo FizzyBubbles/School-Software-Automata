@@ -1,11 +1,12 @@
 import $ from "jquery";
 import p5, { Color } from "p5";
 import _ from "lodash";
+
 // CONSTANTS
 const UI_RATIO = 0.3;
 const CELL_SIZE = 20;
 const FRAME_RATE = 60;
-const UPDATE_FRAME_RATE = 5; // how many frames per udate
+var updateFrameRate = 5; // how many frames per udate
 
 const mooreNeighbourhood: Neighbourhood = [
   { x: -1, y: -1 },
@@ -408,7 +409,10 @@ const sketch = (sk: any) => {
   };
 
   sk.mouseDragged = () => {
-    setGridCellState(gameGrid, mouseTileOver());
+    console.log($("#statisticBar: hover"))
+    if (getCellStateFromGrid(gameGrid, mouseTileOver()) !== clickState && $("#statisticBar: hover").length !== 0) {
+      setGridCellState(gameGrid, mouseTileOver());
+    };
   };
 
   let oldMousePosition: Coord;
@@ -440,7 +444,7 @@ const sketch = (sk: any) => {
 
     oldMousePosition = mouseTileOver();
     sk.pop();
-    if (sk.frameCount % UPDATE_FRAME_RATE == 0) {
+    if (sk.frameCount % updateFrameRate == 0) {
       if (play) {
         setGameGrid(updateGrid(gameGrid, GOL));
       }
@@ -454,17 +458,27 @@ const sketch = (sk: any) => {
     setGameGrid(constructGrid(gridSize.x, gridSize.y));
   };
 
+  const rand = () => {
+    //sets the game grid to a random grid
+    setGameGrid(randomGrid(['dead', 'alive']));
+  }
+
   $("#iterateButton").on("click", () => {
     setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
   });
   $("#resetButton").on("click", reset);
+  $("#randomButton").on("click", rand);
+
 };
 
 const togglePlay = (): void => {
   play = !play;
 };
 
+const setSpeed = () => {
+  updateFrameRate = FRAME_RATE - document.getElementById("speedSlider").value;
+}
 // event listeners
 $("#playPauseButton").on("click", togglePlay);
-
+$("#speedSlider").on("change", setSpeed);
 new p5(sketch);

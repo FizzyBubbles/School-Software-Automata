@@ -27,6 +27,12 @@ var updateFrameRate = 5; // how many frames per udate
 var play: boolean = false;
 
 var GOL: RuleSet;
+// stores the colour mapping from state to colour.
+var colourLibrary: { [key: string]: string } = {
+  dead: "black",
+  alive: "white",
+};
+
 
 type CellState = string;
 
@@ -187,6 +193,7 @@ export const createRule = (params: RuleParameters) => {
 var py = 0; // perlin noise y position
 var px = 0; // perlin noise x position
 const sketch = (sk: any) => {
+
   const perlinGrid = (states: CellState[]): Grid => {
     let gridMatrix = [];
 
@@ -244,11 +251,6 @@ const sketch = (sk: any) => {
     }
   };
 
-  // stores the colour mapping from state to colour.
-  var colourLibrary: { [key: string]: string } = {
-    dead: "black",
-    alive: "white",
-  };
 
   const getStateColor = (state: CellState) => colourLibrary[state];
 

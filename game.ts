@@ -1,6 +1,6 @@
 import $ from "jquery";
 import p5, { Color } from "p5";
-import _, { forEach } from "lodash";
+import _, { forEach, create } from "lodash";
 
 // CONSTANTS
 const UI_RATIO = 0.3;
@@ -35,6 +35,10 @@ var colourLibrary: { [key: string]: string } = {
   dead: "black",
   alive: "white",
   dying: "blue",
+  empty: "black",
+  electronHead: "blue",
+  electronTail: "red",
+  conductor: "yellow",
 }; 
 
 type CellState = string; 
@@ -172,7 +176,6 @@ export const createRule = (params: RuleParameters) => {
   const desiredStateFunction = isOneOfStates(requiredNeighbourStates);
   if (requiredNeighbourStates[0] === 'none') {
     const desiredStateFunction = () => true;
-    console.log('bruh');
   }
   // creates anonymous rule function that takes in a cell state and neighbourhood and returns the value of the cell if the rule was applied to just that cell
   const rule = (
@@ -363,19 +366,38 @@ const sketch = (sk: any) => {
       x: Math.floor(sk.windowWidth / CELL_SIZE), // gets the amount of cells you can fit in the x axis
       y: Math.floor(sk.windowHeight / CELL_SIZE), // gets the amount of cells you can fit in the y axis
     };
-    
+    // Wire World
+    const WWRule1: RuleFunction = createRule({
+      initialCellState: "electronHead",
+      finalCellState: "electronTail",
+      desiredStateCountBounds: { lower: 0, upper: 8 },
+      requiredNeighbourStates: ["none"],
+    });
+    const WWRule2: RuleFunction = createRule({
+      initialCellState: "electronTail",
+      finalCellState: "conductor",
+      desiredStateCountBounds: { lower: 0, upper: 8 },
+      requiredNeighbourStates: ["none"],
+    });
+    const WWRule3: RuleFunction = createRule({
+      initialCellState: "conductor",
+      finalCellState: "electronHead",
+      desiredStateCountBounds: { lower: 1, upper: 2 },
+      requiredNeighbourStates: ["electronHead"],
+    });
+    const WireWorld: RuleSet = {
+      rules: [WWRule1, WWRule2, WWRule3],
+      neighbourhood: mooreNeighbourhood,
+      states: ["empty", "electronHead", "electronTail", "conductor"],
+      defaultState: "dead",
+    }
+
     // Brians Brain rule set
     const BBBorn1: RuleFunction = createRule({
-      initialCellState: "alive",
-      finalCellState: "dead",
+      initialCellState: "dead",
+      finalCellState: "alive",
       desiredStateCountBounds: { lower: 2, upper: 2 },
       requiredNeighbourStates: ["alive"],
-    });
-    const BBBorn2: RuleFunction = createRule({
-      initialCellState: "alive",
-      finalCellState: "dead",
-      desiredStateCountBounds: { lower: 2, upper: 2 },
-      requiredNeighbourStates: ["dying"],
     });
     const BBDying: RuleFunction = createRule({
       initialCellState: "alive",
@@ -391,14 +413,12 @@ const sketch = (sk: any) => {
     });
 
     const BriansBrain: RuleSet = {
-      rules: [BBBorn1, BBBorn2, BBDying, BBdeath],
+      rules: [BBBorn1, BBDying, BBdeath],
       neighbourhood: mooreNeighbourhood,
       states: ["dead", "alive", "dying"],
       defaultState: "dead",
     }
     
-
-
     // Game of life rule set 
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
@@ -430,7 +450,7 @@ const sketch = (sk: any) => {
 
     setGameGrid(constructGrid(gridSize.x, gridSize.y, currentRuleSet.defaultState)); // creates grid
 
-    displayStatesOnSideMenu(BriansBrain);
+    displayStatesOnSideMenu(currentRuleSet);
   };
 
   // click handling
@@ -439,8 +459,7 @@ const sketch = (sk: any) => {
   const setClickState = (position: number, cellStates: CellState[]): void => {
     clickState = cellStates[position];
   };
-
-  console.log(isOneOfStates(['bruh', 'big', 'smoll'])('big'));
+  
   // window.addEventListener("wheel", _.throttle(jumpUp, 500, { leading: true }));
   const setGridCellState = (oldGrid: Grid, coord: Coord): void => {
     oldGrid.matrix[coord.x][coord.y] = clickState;

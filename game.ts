@@ -75,7 +75,7 @@ type RuleParameters = {
   initialCellState: CellState;
   finalCellState: CellState;
   desiredStateCountBounds: Bound;
-  requiredNeighbourState: CellState;
+  requiredNeighbourStates: CellState[];
 };
 
 const isWithinBounds = (n: number, bounds: Bound) =>
@@ -166,11 +166,11 @@ export const createRule = (params: RuleParameters) => {
     initialCellState,
     finalCellState,
     desiredStateCountBounds,
-    requiredNeighbourState,
+    requiredNeighbourStates,
   } = params;
 
-  const desiredStateFunction = isState(requiredNeighbourState);
-  if (requiredNeighbourState == 'none') {
+  const desiredStateFunction = isOneOfStates(requiredNeighbourStates);
+  if (requiredNeighbourStates[0] === 'none') {
     const desiredStateFunction = () => true;
     console.log('bruh');
   }
@@ -369,25 +369,25 @@ const sketch = (sk: any) => {
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 2, upper: 2 },
-      requiredNeighbourState: "alive",
+      requiredNeighbourStates: ["alive"],
     });
     const BBBorn2: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 2, upper: 2 },
-      requiredNeighbourState: "dying",
+      requiredNeighbourStates: ["dying"],
     });
     const BBDying: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dying",
       desiredStateCountBounds: { lower: 0, upper: 8 },
-      requiredNeighbourState: "none",
+      requiredNeighbourStates: ["none"],
     });
     const BBdeath: RuleFunction = createRule({
       initialCellState: "dying",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 0, upper: 8 },
-      requiredNeighbourState: "none",
+      requiredNeighbourStates: ["none"],
     });
 
     const BriansBrain: RuleSet = {
@@ -404,19 +404,19 @@ const sketch = (sk: any) => {
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 0, upper: 1 },
-      requiredNeighbourState: "alive",
+      requiredNeighbourStates: ["alive"],
     });
     const deathByCrowding: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
       desiredStateCountBounds: { lower: 4, upper: 8 },
-      requiredNeighbourState: "alive",
+      requiredNeighbourStates: ["alive"],
     });
     const birth: RuleFunction = createRule({
       initialCellState: "dead",
       finalCellState: "alive",
       desiredStateCountBounds: { lower: 3, upper: 3 },
-      requiredNeighbourState: "alive",
+      requiredNeighbourStates: ["alive"],
     });
 
     GOL = {

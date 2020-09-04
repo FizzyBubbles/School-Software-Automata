@@ -1,6 +1,6 @@
 import $ from "jquery";
 import p5, { Color } from "p5";
-import _ from "lodash";
+import _, { forEach } from "lodash";
 
 // CONSTANTS
 const UI_RATIO = 0.3;
@@ -27,16 +27,19 @@ var updateFrameRate = 5; // how many frames per udate
 var play: boolean = false;
 
 var GOL: RuleSet;
+var BriansBrain: RuleSet;
+
+var currentRuleSet: RuleSet;
 // stores the colour mapping from state to colour.
 var colourLibrary: { [key: string]: string } = {
   dead: "black",
   alive: "white",
-};
+  dying: "blue",
+}; 
 
+type CellState = string; 
 
-type CellState = string;
-
-type Cell = {
+type Cell = { 
   pos: Coord;
   state: CellState;
 };
@@ -61,6 +64,7 @@ export type RuleSet = {
   rules: RuleFunction[];
   neighbourhood: Neighbourhood;
   states: CellState[];
+  defaultState: CellState;
 };
 
 type Bound = {
@@ -83,16 +87,18 @@ const getCellStateFromGrid = (grid: Grid, { x, y }: Coord) => grid.matrix[x][y];
 const isState = (desiredState: CellState) => (cellState: CellState) =>
   cellState === desiredState;
 
+const isOneOfStates = (desiredStates: CellState[]) => (cellState: CellState) => desiredStates.includes(cellState);
+
 const randomInt = (max: number): number =>
   Math.floor(Math.random() * Math.floor(max));
 
-const constructGrid = (rows: number, columns: number): Grid => {
+const constructGrid = (rows: number, columns: number, defaultCellState: CellState): Grid => {
   // creates a new 2d array using for loops
   let gridMatrix = [];
   for (let x = 0; x < rows; x++) {
     let column = [];
     for (let y = 0; y < columns; y++) {
-      column.push("dead"); // adds the default state into the columns
+      column.push(defaultCellState); // adds the default state into the columns
     }
     gridMatrix.push(column);
   }
@@ -163,13 +169,18 @@ export const createRule = (params: RuleParameters) => {
     requiredNeighbourState,
   } = params;
 
+  const desiredStateFunction = isState(requiredNeighbourState);
+  if (requiredNeighbourState == 'none') {
+    const desiredStateFunction = () => true;
+    console.log('bruh');
+  }
   // creates anonymous rule function that takes in a cell state and neighbourhood and returns the value of the cell if the rule was applied to just that cell
   const rule = (
     cellState: CellState,
     neighbourhood: CellState[]
   ): CellState => {
+    const isDesiredState = desiredStateFunction;   
     // don't apply if initial cell not initialCellState
-    const isDesiredState = isState(requiredNeighbourState);
     if (cellState !== initialCellState) {
       return cellState;
     }
@@ -222,14 +233,14 @@ const sketch = (sk: any) => {
     }
     // sets grid to perlin noise grid
     if (sk.keyCode === 80) {
-      setGameGrid(perlinGrid(["dead", "alive"]));
+      setGameGrid(perlinGrid(currentRuleSet.states));
     }
     // sets grid to random grid
     if (sk.keyCode === 82) {
-      setGameGrid(randomGrid(["dead", "alive"]));
+      setGameGrid(randomGrid(currentRuleSet.states));
     }
     if (sk.keyCode === 73) {
-      setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
+      setGameGrid(iterateAndDisplayGrid(gameGrid, currentRuleSet));
     }
     if (sk.keyCode === 67) {
       reset();
@@ -247,7 +258,7 @@ const sketch = (sk: any) => {
       (sk.keyCode >= 48 && sk.keyCode <= 57) ||
       (sk.keyCode >= 96 && sk.keyCode <= 104)
     ) {
-      setClickState(sk.key % 2, ["dead", "alive"]);
+      setClickState((sk.key - 1) % currentRuleSet.states.length, currentRuleSet.states);
     }
   };
 
@@ -352,9 +363,43 @@ const sketch = (sk: any) => {
       x: Math.floor(sk.windowWidth / CELL_SIZE), // gets the amount of cells you can fit in the x axis
       y: Math.floor(sk.windowHeight / CELL_SIZE), // gets the amount of cells you can fit in the y axis
     };
-    setGameGrid(constructGrid(gridSize.x, gridSize.y)); // creates grid
+    
+    // Brians Brain rule set
+    const BBBorn1: RuleFunction = createRule({
+      initialCellState: "alive",
+      finalCellState: "dead",
+      desiredStateCountBounds: { lower: 2, upper: 2 },
+      requiredNeighbourState: "alive",
+    });
+    const BBBorn2: RuleFunction = createRule({
+      initialCellState: "alive",
+      finalCellState: "dead",
+      desiredStateCountBounds: { lower: 2, upper: 2 },
+      requiredNeighbourState: "dying",
+    });
+    const BBDying: RuleFunction = createRule({
+      initialCellState: "alive",
+      finalCellState: "dying",
+      desiredStateCountBounds: { lower: 0, upper: 8 },
+      requiredNeighbourState: "none",
+    });
+    const BBdeath: RuleFunction = createRule({
+      initialCellState: "dying",
+      finalCellState: "dead",
+      desiredStateCountBounds: { lower: 0, upper: 8 },
+      requiredNeighbourState: "none",
+    });
 
-    // Game of life rule set
+    const BriansBrain: RuleSet = {
+      rules: [BBBorn1, BBBorn2, BBDying, BBdeath],
+      neighbourhood: mooreNeighbourhood,
+      states: ["dead", "alive", "dying"],
+      defaultState: "dead",
+    }
+    
+
+
+    // Game of life rule set 
     const deathByLonelyness: RuleFunction = createRule({
       initialCellState: "alive",
       finalCellState: "dead",
@@ -378,9 +423,14 @@ const sketch = (sk: any) => {
       rules: [deathByLonelyness, deathByCrowding, birth],
       neighbourhood: mooreNeighbourhood,
       states: ["dead", "alive"],
+      defaultState: "dead",
     };
+    
+    currentRuleSet = BriansBrain;
 
-    displayStatesOnSideMenu(GOL);
+    setGameGrid(constructGrid(gridSize.x, gridSize.y, currentRuleSet.defaultState)); // creates grid
+
+    displayStatesOnSideMenu(BriansBrain);
   };
 
   // click handling
@@ -390,6 +440,7 @@ const sketch = (sk: any) => {
     clickState = cellStates[position];
   };
 
+  console.log(isOneOfStates(['bruh', 'big', 'smoll'])('big'));
   // window.addEventListener("wheel", _.throttle(jumpUp, 500, { leading: true }));
   const setGridCellState = (oldGrid: Grid, coord: Coord): void => {
     oldGrid.matrix[coord.x][coord.y] = clickState;
@@ -448,7 +499,7 @@ const sketch = (sk: any) => {
     sk.pop();
     if (sk.frameCount % updateFrameRate == 0) {
       if (play) {
-        setGameGrid(updateGrid(gameGrid, GOL));
+        setGameGrid(updateGrid(gameGrid, currentRuleSet));
       }
     }
     //gameGrid = updatedGrid;
@@ -457,16 +508,16 @@ const sketch = (sk: any) => {
   // reset function
   const reset = () => {
     // sets the game grid to a dead cell state grid (empty)
-    setGameGrid(constructGrid(gridSize.x, gridSize.y));
+    setGameGrid(constructGrid(gridSize.x, gridSize.y, currentRuleSet.defaultState));
   };
 
   const rand = () => {
     //sets the game grid to a random grid
-    setGameGrid(randomGrid(["dead", "alive"]));
+    setGameGrid(randomGrid(currentRuleSet.states));
   };
 
   $("#iterateButton").on("click", () => {
-    setGameGrid(iterateAndDisplayGrid(gameGrid, GOL));
+    setGameGrid(iterateAndDisplayGrid(gameGrid, currentRuleSet));
   });
   $("#resetButton").on("click", reset);
   $("#randomButton").on("click", rand);
